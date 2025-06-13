@@ -24,3 +24,112 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Chord Highlighting Styles */
+.chord-highlight {
+  color: #0f766e !important;
+  /* Teal-700 */
+  font-weight: 600;
+  background-color: rgba(15, 118, 110, 0.12);
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(15, 118, 110, 0.3);
+  font-family: 'Courier New', monospace;
+  font-size: 1.1em;
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.chord-highlight:hover {
+  background-color: rgba(15, 118, 110, 0.2);
+  transform: scale(1.05);
+  border-color: rgba(15, 118, 110, 0.5);
+}
+
+.chord-content .chord-highlight {
+  font-family: 'Courier New', monospace;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .chord-highlight {
+    font-size: 0.95em;
+    padding: 2px 3px;
+  }
+}
+
+/* Dark mode support */
+.dark .chord-highlight {
+  color: #00FFFF;
+  background-color: rgba(0, 255, 255, 0.15);
+  border-color: rgba(0, 255, 255, 0.4);
+}
+
+/* Chord Content Styling */
+.chord-content {
+  color: #1A2A3A !important;
+  /* Dark text untuk better contrast */
+  line-height: 1.6;
+}
+
+/* Section Headers (Intro, Verse, Chorus, etc.) */
+.chord-content .section-header {
+  color: #1A2A3A !important;
+  font-weight: 700;
+  font-size: 1.2em;
+  margin: 16px 0 8px 0;
+  padding: 4px 8px;
+  background-color: rgba(15, 118, 110, 0.1);
+  border-left: 4px solid #0f766e;
+  border-radius: 4px;
+  display: block;
+}
+
+/* Lyrics text */
+.chord-content .lyrics-line {
+  color: #2A3A4A !important;
+  margin: 2px 0;
+  font-size: 1em;
+}
+
+/* Empty lines for spacing */
+.chord-content .empty-line {
+  height: 8px;
+  display: block;
+}
+
+/* Mobile optimization for chord content */
+@media (max-width: 768px) {
+  .chord-content {
+    font-size: 0.9em;
+  }
+
+  .chord-content .section-header {
+    font-size: 1.1em;
+    padding: 3px 6px;
+  }
+}
+
+/* Dark mode support for chord content */
+.dark .chord-content {
+  color: #E0E0E0 !important;
+}
+
+.dark .chord-content .section-header {
+  color: #FFFFFF !important;
+  background-color: rgba(15, 118, 110, 0.2);
+  border-left-color: #14b8a6;
+  /* Teal-500 for better visibility in dark mode */
+}
+
+.dark .chord-content .lyrics-line {
+  color: #D0D0D0 !important;
+}
+
+/* Dark mode support for chord highlights */
+.dark .chord-highlight {
+  color: #14b8a6 !important;
+  /* Teal-500 - lighter for dark background */
+  background-color: rgba(20, 184, 166, 0.15);
+  border-color: rgba(20, 184, 166, 0.4);
+}

@@ -7,7 +7,7 @@ import Image from 'next/image';
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle search functionality here
@@ -31,24 +31,25 @@ const Navbar = () => {
                 <span className="text-[#00FFFF]">.</span>
               </span>
             </Link>
-          </div>
-
-          {/* Search bar */}
+          </div>          {/* Search bar */}
           <div className="flex-1 max-w-md mx-4">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
-                placeholder="Search for chord songs..."
-                className="w-full py-2 pl-4 pr-10 rounded-md border-0 bg-[#2A3A4A] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FFFF]"
+                placeholder="Cari judul lagu atau artis..."
+                className="w-full py-2 pl-4 pr-12 rounded-md border-0 bg-[#2A3A4A] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FFFF]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="absolute inset-y-0 right-0 px-3 flex items-center bg-[#00FFFF] text-[#1A2A3A] font-medium rounded-r-md hover:bg-[#B0A0D0] transition-colors"
               >
-                Search
-              </button>
+                {/* Show text on desktop, icon on mobile */}
+                <span className="hidden sm:block">Search</span>
+                <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>              </button>
             </form>
           </div>
 
@@ -63,8 +64,8 @@ const Navbar = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <button 
-              onClick={toggleMenu} 
+            <button
+              onClick={toggleMenu}
               className="outline-none mobile-menu-button"
               aria-label="Toggle menu"
             >
