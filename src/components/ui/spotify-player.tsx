@@ -54,17 +54,15 @@ const SpotifyPlayer = ({
             <div className="p-4">
                 {/* Spotify Embed */}
                 {spotifyEmbedUrl ? (
-                    <div className="rounded-lg overflow-hidden">
-                        <iframe
-                            src={spotifyEmbedUrl}
-                            width="100%"
-                            height="352"
-                            frameBorder="0"
-                            allowTransparency={true}
-                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                            loading="lazy"
-                            className="rounded-lg"
-                        />
+                    <div className="rounded-lg overflow-hidden">                        <iframe
+                        src={spotifyEmbedUrl}
+                        width="100%"
+                        height="352"
+                        frameBorder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        className="rounded-lg"
+                    />
                     </div>
                 ) : (
                     <div className="p-6 bg-gray-50 rounded-lg text-center">

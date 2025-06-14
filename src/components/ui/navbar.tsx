@@ -51,15 +51,14 @@ const Navbar = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>              </button>
             </form>
-          </div>
-
-          {/* Navigation items */}
+          </div>          {/* Navigation items */}
           <div className="hidden md:flex items-center space-x-6">
             <Link href="/" className="text-white hover:text-[#00FFFF] font-medium transition-colors">Beranda</Link>
             <Link href="/genre" className="text-white hover:text-[#00FFFF] font-medium transition-colors">Genre</Link>
             <Link href="/artists" className="text-white hover:text-[#00FFFF] font-medium transition-colors">Artis</Link>
             <Link href="/popular" className="text-white hover:text-[#00FFFF] font-medium transition-colors">Terpopuler</Link>
             <Link href="/about" className="text-white hover:text-[#00FFFF] font-medium transition-colors">Tentang</Link>
+            <Link href="/login" className="bg-[#00FFFF] text-[#1A2A3A] px-4 py-2 rounded-lg font-medium hover:bg-[#B0A0D0] transition-colors">Login</Link>
           </div>
 
           {/* Mobile menu button */}
@@ -100,9 +99,11 @@ const Navbar = () => {
             </li>
             <li>
               <Link href="/popular" className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-[#2A3A4A] hover:text-[#00FFFF]">Terpopuler</Link>
-            </li>
-            <li>
+            </li>            <li>
               <Link href="/about" className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-[#2A3A4A] hover:text-[#00FFFF]">Tentang</Link>
+            </li>
+            <li className="pt-2 border-t border-[#2A3A4A]">
+              <Link href="/login" className="block px-3 py-2 rounded-md text-base font-medium bg-[#00FFFF] text-[#1A2A3A] hover:bg-[#B0A0D0] text-center">Login</Link>
             </li>
           </ul>
         </div>

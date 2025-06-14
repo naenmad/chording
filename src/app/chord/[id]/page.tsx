@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import ChordControls from "@/components/ui/chord-controls";
 import ChordDiagram from "@/components/ui/chord-diagram";
 import SpotifyPlayer from "@/components/ui/spotify-player";
-import { highlightChords } from '@/utils/chord-highlighter';
+import { highlightChords } from '@/components/utils/chord-highlighter';
 
 // This would typically come from a database or API
 const getChordData = async (id: string) => {
@@ -217,6 +217,14 @@ export default async function ChordPage({ params }: { params: { id: string } }) 
 
     const formattedLyrics = highlightChords(chord.lyrics);
 
+    // Extract BPM from tempo string (e.g., "120 BPM" -> 120)
+    const extractBPM = (tempo: string): number => {
+        const match = tempo.match(/(\d+)/);
+        return match ? parseInt(match[1]) : 120; // Default to 120 if no number found
+    };
+
+    const bpm = extractBPM(chord.tempo);
+
     return (
         <div className="bg-[#E0E8EF] min-h-screen">
             {/* Header Section */}
@@ -346,8 +354,7 @@ export default async function ChordPage({ params }: { params: { id: string } }) 
                                         artistName={chord.artist}
                                         spotifyUrl={`https://open.spotify.com/search/${encodeURIComponent(`${chord.title} ${chord.artist}`)}`}
                                     />
-                                </div>
-                            )}
+                                </div>)}
 
                             {/* Lyrics and Chords */}
                             <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#00FFFF]">
@@ -406,7 +413,7 @@ export default async function ChordPage({ params }: { params: { id: string } }) 
                         </div>
                     </div>                </div>
             </section>            {/* Floating Chord Controls */}
-            <ChordControls currentKey={chord.key} />
+            <ChordControls currentKey={chord.key} tempo={chord.tempo} />
         </div>
     );
 }

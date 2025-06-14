@@ -4,16 +4,20 @@ import { useState, useEffect } from 'react';
 
 interface ChordControlsProps {
     currentKey?: string;
+    tempo?: string; // Added tempo prop for metronome
 }
 
-const ChordControls = ({ currentKey = "Am" }: ChordControlsProps) => {
+const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isAutoScrolling, setIsAutoScrolling] = useState(false);
     const [scrollSpeed, setScrollSpeed] = useState(2);
     const [fontSize, setFontSize] = useState('medium');
     const [transposeKey, setTransposeKey] = useState(currentKey);
 
-    // Auto scroll functionality
+    // Metronome state
+    const [isMetronomeRunning, setIsMetronomeRunning] = useState(false);
+    const [bpm, setBpm] = useState(parseInt(tempo) || 120);
+    const [metronomeInterval, setMetronomeInterval] = useState<NodeJS.Timeout | null>(null);    // Auto scroll functionality
     useEffect(() => {
         let scrollInterval: NodeJS.Timeout;
 
@@ -30,12 +34,61 @@ const ChordControls = ({ currentKey = "Am" }: ChordControlsProps) => {
         };
     }, [isAutoScrolling, scrollSpeed]);
 
-    const toggleAutoScroll = () => {
+    // Metronome functionality
+    useEffect(() => {
+        if (isMetronomeRunning) {
+            const interval = 60000 / bpm; // Convert BPM to milliseconds
+            const metInterval = setInterval(() => {
+                // Create click sound
+                const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'square';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }, interval);
+
+            setMetronomeInterval(metInterval);
+        } else {
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+                setMetronomeInterval(null);
+            }
+        }
+
+        return () => {
+            if (metronomeInterval) {
+                clearInterval(metronomeInterval);
+            }
+        };
+    }, [isMetronomeRunning, bpm]); const toggleAutoScroll = () => {
         setIsAutoScrolling(!isAutoScrolling);
     };
 
     const adjustScrollSpeed = (speed: number) => {
         setScrollSpeed(speed);
+    };
+
+    // Metronome functions
+    const toggleMetronome = () => {
+        setIsMetronomeRunning(!isMetronomeRunning);
+    };
+
+    const adjustBpm = (newBpm: number) => {
+        setBpm(Math.max(40, Math.min(200, newBpm))); // Limit BPM between 40-200
+    };
+
+    const resetBpm = () => {
+        setBpm(parseInt(tempo) || 120);
     };
 
     const changeFontSize = (size: string) => {
@@ -131,6 +184,64 @@ const ChordControls = ({ currentKey = "Am" }: ChordControlsProps) => {
                                         </div>
                                     </div>
                                 )}
+                            </div>                        </div>
+
+                        {/* Metronome Panel */}
+                        <div className="bg-white rounded-lg shadow-lg p-4 border-t-4 border-[#00FFFF] w-48">
+                            <h4 className="text-sm font-semibold text-[#1A2A3A] mb-3 flex items-center">
+                                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 001 1h3a1 1 0 110 2h-3a1 1 0 00-1 1v3a1 1 0 11-2 0V8a1 1 0 00-1-1H5a1 1 0 110-2h3a1 1 0 001-1V3a1 1 0 011-1z" clipRule="evenodd" />
+                                </svg>
+                                Metronome
+                            </h4>
+                            <div className="space-y-2">
+                                <div className="text-center">
+                                    <span className="text-lg font-bold text-[#00FFFF]">{bpm} BPM</span>
+                                </div>
+                                <button
+                                    onClick={toggleMetronome}
+                                    className={`w-full py-2 px-3 rounded text-sm font-medium transition-colors ${isMetronomeRunning
+                                        ? 'bg-red-500 text-white hover:bg-red-600'
+                                        : 'bg-[#00FFFF] text-[#1A2A3A] hover:bg-[#B0A0D0]'
+                                        }`}
+                                >
+                                    {isMetronomeRunning ? 'Stop' : 'Start'} {isMetronomeRunning && '♪'}
+                                </button>
+                                <div className="space-y-1">
+                                    <label className="text-xs text-gray-600">Adjust BPM:</label>
+                                    <div className="flex space-x-1">
+                                        <button
+                                            onClick={() => adjustBpm(bpm - 10)}
+                                            className="flex-1 py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            -10
+                                        </button>
+                                        <button
+                                            onClick={() => adjustBpm(bpm - 1)}
+                                            className="flex-1 py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            -1
+                                        </button>
+                                        <button
+                                            onClick={() => adjustBpm(bpm + 1)}
+                                            className="flex-1 py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            +1
+                                        </button>
+                                        <button
+                                            onClick={() => adjustBpm(bpm + 10)}
+                                            className="flex-1 py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            +10
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={resetBpm}
+                                        className="w-full bg-[#1A2A3A] hover:bg-[#2A3A4A] text-white py-1 px-3 rounded text-xs transition-colors"
+                                    >
+                                        Reset to Original
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -248,9 +359,8 @@ const ChordControls = ({ currentKey = "Am" }: ChordControlsProps) => {
                     </div>
 
                     {/* Bottom sheet content */}
-                    <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">
-                        {/* Control sections in horizontal layout */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="px-4 pb-6 max-h-[70vh] overflow-y-auto">                        {/* Control sections in horizontal layout */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Auto Scroll Section */}
                             <div className="space-y-3">
                                 <h4 className="text-sm font-semibold text-[#1A2A3A] flex items-center">
@@ -287,6 +397,63 @@ const ChordControls = ({ currentKey = "Am" }: ChordControlsProps) => {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Metronome Section */}
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-semibold text-[#1A2A3A] flex items-center">
+                                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 001 1h3a1 1 0 110 2h-3a1 1 0 00-1 1v3a1 1 0 11-2 0V8a1 1 0 00-1-1H5a1 1 0 110-2h3a1 1 0 001-1V3a1 1 0 011-1z" clipRule="evenodd" />
+                                    </svg>
+                                    Metronome
+                                </h4>
+                                <div className="text-center">
+                                    <span className="text-lg font-bold text-[#00FFFF]">{bpm} BPM</span>
+                                </div>
+                                <button
+                                    onClick={toggleMetronome}
+                                    className={`w-full py-2 px-3 rounded text-sm font-medium transition-colors ${isMetronomeRunning
+                                        ? 'bg-red-500 text-white hover:bg-red-600'
+                                        : 'bg-[#00FFFF] text-[#1A2A3A] hover:bg-[#B0A0D0]'
+                                        }`}
+                                >
+                                    {isMetronomeRunning ? 'Stop' : 'Start'} {isMetronomeRunning && '♪'}
+                                </button>
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-600">Adjust BPM:</label>
+                                    <div className="grid grid-cols-4 gap-1">
+                                        <button
+                                            onClick={() => adjustBpm(bpm - 10)}
+                                            className="py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            -10
+                                        </button>
+                                        <button
+                                            onClick={() => adjustBpm(bpm - 1)}
+                                            className="py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            -1
+                                        </button>
+                                        <button
+                                            onClick={() => adjustBpm(bpm + 1)}
+                                            className="py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            +1
+                                        </button>
+                                        <button
+                                            onClick={() => adjustBpm(bpm + 10)}
+                                            className="py-1 px-2 rounded text-xs bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        >
+                                            +10
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={resetBpm}
+                                        className="w-full bg-[#1A2A3A] hover:bg-[#2A3A4A] text-white py-1 px-3 rounded text-xs transition-colors"
+                                    >
+                                        Reset to Original
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Transpose Section */}
