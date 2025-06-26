@@ -1,24 +1,32 @@
-import Image from "next/image";
 import Link from "next/link";
+import OnboardingBanner from "@/components/OnboardingBanner";
+import { songAPI } from "@/lib/supabase";
+// import HomeFloatingActions from "@/components/ui/home-floating-actions";
 
-export default function Home() {
-  // Sample featured chord data
-  const featuredChords = [
-    { id: 1, title: "Bintang di Surga", artist: "Peterpan", difficulty: "Intermediate" },
-    { id: 2, title: "Kau Adalah", artist: "Isyana Sarasvati", difficulty: "Easy" },
-    { id: 3, title: "Aku Milikmu", artist: "Iwan Fals", difficulty: "Advanced" },
-    { id: 4, title: "Mencari Alasan", artist: "Exists", difficulty: "Intermediate" },
-  ];
+// Types for our data
+type FeaturedSong = {
+  id: string;
+  slug?: string;
+  title: string;
+  artist_name: string;
+  difficulty: string;
+  view_count: number;
+};
 
-  // Sample genre data
-  const genres = [
-    { id: 1, name: "Pop", count: 120 },
-    { id: 2, name: "Rock", count: 85 },
-    { id: 3, name: "Dangdut", count: 64 },
-    { id: 4, name: "Jazz", count: 42 },
-    { id: 5, name: "Folk", count: 37 },
-    { id: 6, name: "Alternative", count: 29 },
-  ];
+type Genre = {
+  id: string;
+  name: string;
+  count: number;
+};
+
+// Server Component - fetch data on server
+export default async function Home() {
+  // Fetch featured songs from database
+  const { data: featuredChords = [], error: songsError } = await songAPI.getFeaturedSongs(4);
+
+  // Fetch genres with count from database
+  const genresResponse = await songAPI.getGenresWithCount();
+  const genres = genresResponse?.data || [];
 
   return (
     <div className="bg-[#E0E8EF] min-h-screen">
@@ -50,6 +58,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Onboarding Banner */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <OnboardingBanner />
+      </div>
+
       {/* Featured Chords Section */}
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
@@ -59,21 +72,44 @@ export default function Home() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredChords.map((chord) => (
-              <Link
-                href={`/chord/${chord.id}`}
-                key={chord.id}
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="p-6 border-t-4 border-[#00FFFF]">
-                  <h3 className="text-xl font-semibold text-[#1A2A3A] mb-2">{chord.title}</h3>
-                  <p className="text-gray-600 mb-3">{chord.artist}</p>
-                  <span className="inline-block bg-[#E0E8EF] text-[#1A2A3A] text-sm px-3 py-1 rounded-full">
-                    {chord.difficulty}
-                  </span>
+            {featuredChords && featuredChords.length > 0 ? (
+              featuredChords.map((chord) => (
+                <Link
+                  href={`/chord/${chord.slug || chord.id}`}
+                  key={chord.id}
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <div className="p-6 border-t-4 border-[#00FFFF]">
+                    <h3 className="text-xl font-semibold text-[#1A2A3A] mb-2">{chord.title}</h3>
+                    <p className="text-gray-600 mb-3">{chord.artist_name}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="inline-block bg-[#E0E8EF] text-[#1A2A3A] text-sm px-3 py-1 rounded-full">
+                        {chord.difficulty}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {chord.view_count?.toLocaleString()} views
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              // Fallback content when no data
+              Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-lg overflow-hidden shadow-md"
+                >
+                  <div className="p-6 border-t-4 border-[#00FFFF]">
+                    <div className="animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-3 w-3/4"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
                 </div>
-              </Link>
-            ))}
+              ))
+            )}
           </div>
 
           <div className="mt-10 text-center">
@@ -96,16 +132,30 @@ export default function Home() {
           </h2>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {genres.map((genre) => (
-              <Link
-                href={`/genre/${genre.id}`}
-                key={genre.id}
-                className="bg-[#2A3A4A] p-6 rounded-lg text-center hover:bg-[#3A4A5A] transition-colors"
-              >
-                <h3 className="text-xl font-semibold mb-2">{genre.name}</h3>
-                <p className="text-[#00FFFF]">{genre.count} lagu</p>
-              </Link>
-            ))}
+            {genres && genres.length > 0 ? (
+              genres.slice(0, 6).map((genre: any) => (
+                <Link
+                  href={`/genre/songs?name=${encodeURIComponent(genre.name)}`}
+                  key={genre.id}
+                  className="bg-[#2A3A4A] p-6 rounded-lg text-center hover:bg-[#3A4A5A] transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">{genre.name}</h3>
+                  <p className="text-[#00FFFF]">{Number(genre.count)} lagu</p>
+                </Link>
+              ))
+            ) : (
+              // Fallback genres
+              ['Pop', 'Rock', 'Folk', 'Jazz', 'Alternative', 'Dangdut'].map((genreName, index) => (
+                <Link
+                  href={`/genre/songs?name=${encodeURIComponent(genreName)}`}
+                  key={index}
+                  className="bg-[#2A3A4A] p-6 rounded-lg text-center hover:bg-[#3A4A5A] transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">{genreName}</h3>
+                  <p className="text-[#00FFFF]">-- lagu</p>
+                </Link>
+              ))
+            )}
           </div>
 
           <div className="mt-10 text-center">
@@ -161,8 +211,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-16 px-4 bg-[#B0A0D0] bg-opacity-20">
+      {/* Call to Action dengan tambahan untuk user yang login */}
+      <section className="py-16 px-4 bg-[#B0A0D0] bg-opacity-20 relative">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6 text-[#1A2A3A]">
             Mulai Bermain Sekarang
@@ -170,12 +220,20 @@ export default function Home() {
           <p className="text-xl mb-8 text-gray-700 max-w-2xl mx-auto">
             Dapatkan akses ke ribuan chord lagu dari berbagai genre dan artis favoritmu.
           </p>
-          <Link
-            href="/popular"
-            className="inline-block px-8 py-4 bg-[#00FFFF] text-[#1A2A3A] rounded-md font-bold hover:bg-[#1A2A3A] hover:text-white transition-colors"
-          >
-            Jelajahi Chord
-          </Link>
+          <div className="flex justify-center space-x-4">
+            <Link
+              href="/popular"
+              className="inline-block px-8 py-4 bg-[#00FFFF] text-[#1A2A3A] rounded-md font-bold hover:bg-[#1A2A3A] hover:text-white transition-colors"
+            >
+              Jelajahi Chord
+            </Link>
+            <Link
+              href="/add-chord"
+              className="inline-block px-8 py-4 bg-[#1A2A3A] text-white rounded-md font-bold hover:bg-[#00FFFF] hover:text-[#1A2A3A] transition-colors border-2 border-[#1A2A3A] hover:border-[#00FFFF]"
+            >
+              Tambah Chord
+            </Link>
+          </div>
         </div>
       </section>
     </div>

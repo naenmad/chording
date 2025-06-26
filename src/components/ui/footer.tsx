@@ -8,9 +8,9 @@ const Footer = () => {
   return (
     <footer className="bg-[#1A2A3A] text-white pt-10 pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About Section */}
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 lg:col-span-2">
             <h3 className="text-xl font-bold mb-4 flex items-center">
               Chording!
               <span className="text-[#00FFFF]">.</span>
@@ -19,6 +19,35 @@ const Footer = () => {
               Chording! adalah sumber terlengkap untuk menemukan chord gitar lagu favoritmu.
               Temukan dan pelajari chord lagu dari berbagai genre dan artis.
             </p>
+          </div>
+
+          {/* Music Tools */}
+          <div className="col-span-1">
+            <h3 className="text-lg font-semibold mb-4 text-[#B0A0D0]">Tools Musik</h3>
+            <ul className="space-y-3">
+              <li>
+                <Link href="/tuning" className="group flex items-center text-gray-300 hover:text-[#00FFFF] transition-all duration-200">
+                  <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-[#00FFFF]/20 to-[#B0A0D0]/20 rounded-lg mr-3 group-hover:from-[#00FFFF]/30 group-hover:to-[#B0A0D0]/30 transition-all duration-200">
+                    🎸
+                  </div>
+                  <div>
+                    <span className="font-medium">Guitar Tuner</span>
+                    <p className="text-xs text-gray-400 group-hover:text-gray-300">Tune gitar otomatis</p>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/metronome" className="group flex items-center text-gray-300 hover:text-[#00FFFF] transition-all duration-200">
+                  <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-[#00FFFF]/20 to-[#B0A0D0]/20 rounded-lg mr-3 group-hover:from-[#00FFFF]/30 group-hover:to-[#B0A0D0]/30 transition-all duration-200">
+                    🥁
+                  </div>
+                  <div>
+                    <span className="font-medium">Metronome</span>
+                    <p className="text-xs text-gray-400 group-hover:text-gray-300">Latih tempo & ritme</p>
+                  </div>
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Quick Links */}
@@ -43,6 +72,11 @@ const Footer = () => {
               <li>
                 <Link href="/faq" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
                   FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
+                  Tentang Kami
                 </Link>
               </li>
             </ul>

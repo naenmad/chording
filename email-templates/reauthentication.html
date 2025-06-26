@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Identitas - Chording!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1A2A3A 0%, #2A3A4A 50%, #1A2A3A 100%);
+            min-height: 100vh;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .logo .accent {
+            color: #00FFFF;
+        }
+
+        .tagline {
+            color: #B0BEC5;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .main-content {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            border-top: 4px solid #00FFFF;
+        }
+
+        .content-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .icon {
+            width: 64px;
+            height: 64px;
+            background: #00FFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .content-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1A2A3A;
+            margin: 0 0 10px;
+        }
+
+        .content-subtitle {
+            font-size: 16px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .content-body {
+            padding: 30px;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #495057;
+            margin-bottom: 30px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #00FFFF;
+            color: #1A2A3A;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .alt-link {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .alt-link p {
+            margin: 0 0 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .alt-link a {
+            color: #00FFFF;
+            word-break: break-all;
+            text-decoration: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #B0BEC5;
+        }
+
+        .footer-links {
+            margin: 20px 0;
+        }
+
+        .footer-links a {
+            color: #00FFFF;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 14px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: #78909C;
+            margin: 10px 0;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e9ecef, transparent);
+            margin: 30px 0;
+        }
+
+        .security-badge {
+            background: linear-gradient(135deg, #ff5722 0%, #d84315 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            color: white;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .email-container {
+                padding: 10px;
+            }
+
+            .content-header,
+            .content-body {
+                padding: 20px;
+            }
+
+            .logo {
+                font-size: 28px;
+            }
+
+            .content-title {
+                font-size: 20px;
+            }
+
+            .cta-button {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <a href="{{ .SiteURL }}" class="logo">
+                Chording<span class="accent">!</span>
+            </a>
+            <p class="tagline">Platform Chord Gitar Terlengkap</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Content Header -->
+            <div class="content-header">
+                <div class="icon">
+                    <svg fill="none" stroke="#1A2A3A" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                        </path>
+                    </svg>
+                </div>
+                <h1 class="content-title">Verifikasi Identitas</h1>
+                <p class="content-subtitle">Konfirmasi untuk tindakan penting pada akun Anda</p>
+            </div>
+
+            <!-- Content Body -->
+            <div class="content-body">
+                <div class="message">
+                    <p>Halo <strong>{{ .Email }}</strong>,</p>
+                    <p>Untuk melindungi keamanan akun Anda, kami memerlukan verifikasi identitas sebelum melanjutkan
+                        tindakan sensitif yang Anda minta.</p>
+                </div>
+
+                <div class="security-badge">
+                    <h3 style="margin: 0 0 10px; font-size: 18px;">🛡️ Verifikasi Keamanan</h3>
+                    <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                        Langkah tambahan untuk melindungi akun Anda
+                    </p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div style="font-size: 24px; margin-bottom: 10px;">👤</div>
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">AKUN</div>
+                        <div style="font-weight: 600; color: #1A2A3A;">{{ .Email }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div style="font-size: 24px; margin-bottom: 10px;">🕐</div>
+                        <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">WAKTU</div>
+                        <div style="font-weight: 600; color: #1A2A3A;">{{ .CreatedAt }}</div>
+                    </div>
+                </div>
+
+                <div class="message">
+                    <p>Klik tombol verifikasi di bawah ini untuk mengonfirmasi bahwa Anda yang melakukan tindakan ini:
+                    </p>
+                </div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{{ .ConfirmationURL }}" class="cta-button">
+                        ✅ Verifikasi Identitas Saya
+                    </a>
+                </div>
+
+                <div class="alt-link">
+                    <p>Jika tombol tidak berfungsi, salin dan tempel link berikut ke browser Anda:</p>
+                    <a href="{{ .ConfirmationURL }}">{{ .ConfirmationURL }}</a>
+                </div>
+
+                <div class="divider"></div>
+
+                <div
+                    style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                    <h4 style="margin: 0 0 10px; color: #1976d2;">🔍 Mengapa Verifikasi Diperlukan?</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #1976d2; font-size: 14px;">
+                        <li>Melindungi akun dari akses yang tidak sah</li>
+                        <li>Memastikan hanya Anda yang dapat melakukan perubahan penting</li>
+                        <li>Standar keamanan industri untuk perlindungan data</li>
+                        <li>Mencegah penyalahgunaan akun</li>
+                    </ul>
+                </div>
+
+                <div
+                    style="background: #ffebee; border-left: 4px solid #f44336; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                    <h4 style="margin: 0 0 10px; color: #c62828;">⚠️ Peringatan Keamanan</h4>
+                    <p style="margin: 0; color: #c62828; font-size: 14px;">
+                        <strong>Jika Anda tidak melakukan tindakan ini:</strong><br>
+                        • Jangan klik link verifikasi<br>
+                        • Segera ganti password akun Anda<br>
+                        • Hubungi support kami segera<br>
+                        • Periksa aktivitas akun yang mencurigakan
+                    </p>
+                </div>
+
+                <div
+                    style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                    <h4 style="margin: 0 0 10px; color: #856404;">⏰ Batas Waktu</h4>
+                    <p style="margin: 0; color: #856404; font-size: 14px;">
+                        Link verifikasi ini akan kedaluwarsa dalam <strong>15 menit</strong> untuk keamanan maksimal.
+                        Segera lakukan verifikasi jika Anda yang meminta tindakan ini.
+                    </p>
+                </div>
+
+                <p style="font-size: 14px; color: #6c757d; margin: 20px 0 0;">
+                    Setelah verifikasi berhasil, tindakan yang Anda minta akan diproses secara otomatis.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-links">
+                <a href="{{ .SiteURL }}">Beranda</a>
+                <a href="{{ .SiteURL }}/about">Tentang</a>
+                <a href="{{ .SiteURL }}/contact">Kontak</a>
+                <a href="{{ .SiteURL }}/privacy">Privasi</a>
+            </div>
+            <p class="footer-text">
+                © 2025 Chording! Semua hak dilindungi.<br>
+                Platform chord gitar terlengkap untuk musisi Indonesia.
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

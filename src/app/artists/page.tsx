@@ -1,25 +1,30 @@
 import React from 'react';
 import Link from 'next/link';
+import { songAPI } from '@/lib/supabase';
 
-export default function ArtistsPage() {
-  // Placeholder artist data
-  const artists = [
-    { id: 1, name: 'Tulus', genre: 'Pop', songCount: 24 },
-    { id: 2, name: 'Raisa', genre: 'Pop', songCount: 19 },
-    { id: 3, name: 'Noah', genre: 'Rock', songCount: 17 },
-    { id: 4, name: 'Dewa 19', genre: 'Rock', songCount: 22 },
-    { id: 5, name: 'Iwan Fals', genre: 'Folk', songCount: 30 },
-    { id: 6, name: 'Slank', genre: 'Rock', songCount: 15 },
-    { id: 7, name: 'Via Vallen', genre: 'Dangdut', songCount: 12 },
-    { id: 8, name: 'Sheila On 7', genre: 'Pop', songCount: 18 },
-    { id: 9, name: 'Nidji', genre: 'Pop', songCount: 10 },
-    { id: 10, name: 'Andra & The Backbone', genre: 'Rock', songCount: 8 },
-    { id: 11, name: 'Rhoma Irama', genre: 'Dangdut', songCount: 14 },
-    { id: 12, name: 'Jamrud', genre: 'Rock', songCount: 11 },
+// Types
+type Artist = {
+  name: string;
+  songCount: number;
+};
+
+export default async function ArtistsPage() {
+  // Fetch artists from database
+  const { data: artistsData = [], error } = await songAPI.getAllArtists();
+
+  // Get genres from database for filter
+  const { data: genresData = [] } = await songAPI.getGenresWithCount();
+
+  // Create genres filter array
+  const genres = ['Semua', ...genresData.map(g => g.name)];
+
+  // Add some fallback artists if none in database
+  const artists = artistsData.length > 0 ? artistsData : [
+    { name: 'Tulus', songCount: 0 },
+    { name: 'Raisa', songCount: 0 },
+    { name: 'Noah', songCount: 0 },
+    { name: 'Dewa 19', songCount: 0 },
   ];
-
-  // Placeholder genre filter
-  const genres = ['Semua', 'Pop', 'Rock', 'Dangdut', 'Folk', 'Jazz', 'Alternative'];
 
   return (
     <div className="bg-[#E0E8EF] min-h-screen">
@@ -63,29 +68,45 @@ export default function ArtistsPage() {
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {artists.map((artist) => (
-              <Link
-                href={`/artists/${artist.name.toLowerCase().replace(/\s+/g, '-')}`}
-                key={artist.id}
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow group"
-              >
-                <div className="bg-[#1A2A3A] h-32 flex items-center justify-center">
-                  {/* Placeholder for artist image */}
-                  <span className="text-4xl text-[#00FFFF] font-bold">
-                    {artist.name.charAt(0)}
-                  </span>
+            {artists && artists.length > 0 ? (
+              artists.map((artist, index) => (
+                <Link
+                  href={`/artists/${artist.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  key={index}
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow group"
+                >
+                  <div className="bg-[#1A2A3A] h-32 flex items-center justify-center">
+                    {/* Placeholder for artist image */}
+                    <span className="text-4xl text-[#00FFFF] font-bold">
+                      {artist.name.charAt(0)}
+                    </span>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-[#1A2A3A] group-hover:text-[#00FFFF] transition-colors mb-1">
+                      {artist.name}
+                    </h3>
+                    <span className="inline-block bg-[#E0E8EF] text-[#1A2A3A] text-xs px-3 py-1 rounded-full">
+                      {artist.songCount} lagu
+                    </span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              // Loading skeleton
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg overflow-hidden shadow-md">
+                  <div className="bg-gray-200 h-32 flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+                  </div>
+                  <div className="p-6">
+                    <div className="animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-[#1A2A3A] group-hover:text-[#00FFFF] transition-colors mb-1">
-                    {artist.name}
-                  </h3>
-                  <p className="text-gray-500 text-sm mb-2">Genre: {artist.genre}</p>
-                  <span className="inline-block bg-[#E0E8EF] text-[#1A2A3A] text-xs px-3 py-1 rounded-full">
-                    {artist.songCount} lagu
-                  </span>
-                </div>
-              </Link>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>

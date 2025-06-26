@@ -1,25 +1,42 @@
 import React from 'react';
 import Link from 'next/link';
+import { songAPI } from '@/lib/supabase';
 
-export default function GenrePage() {
-  // Sample genre data with icons and counts
-  const genres = [
-    { id: 1, name: "Pop", count: 120, icon: "🎵" },
-    { id: 2, name: "Rock", count: 85, icon: "🎸" },
-    { id: 3, name: "Dangdut", count: 64, icon: "🎤" },
-    { id: 4, name: "Jazz", count: 42, icon: "🎷" },
-    { id: 5, name: "Folk", count: 37, icon: "🪕" },
-    { id: 6, name: "Alternative", count: 29, icon: "🎹" },
-    { id: 7, name: "Metal", count: 26, icon: "🤘" },
-    { id: 8, name: "Reggae", count: 23, icon: "🌴" },
-    { id: 9, name: "Electronic", count: 21, icon: "🎛️" },
-    { id: 10, name: "R&B", count: 19, icon: "🎙️" },
-    { id: 11, name: "Hip Hop", count: 18, icon: "🎧" },
-    { id: 12, name: "Classical", count: 15, icon: "🎻" },
-    { id: 13, name: "Indie", count: 14, icon: "🎭" },
-    { id: 14, name: "Country", count: 12, icon: "🤠" },
-    { id: 15, name: "Blues", count: 10, icon: "🎺" },
-  ];
+// Types
+type Genre = {
+  id: string;
+  name: string;
+  count: number;
+};
+
+export default async function GenrePage() {
+  // Fetch genres from database
+  const { data: genresData = [], error } = await songAPI.getGenresWithCount();
+
+  // Add icons for genres
+  const genreIcons: { [key: string]: string } = {
+    "Pop": "🎵",
+    "Rock": "🎸",
+    "Dangdut": "🎤",
+    "Jazz": "🎷",
+    "Folk": "🪕",
+    "Alternative": "🎹",
+    "Metal": "🤘",
+    "Reggae": "🌴",
+    "Electronic": "🎛️",
+    "R&B": "🎙️",
+    "Hip Hop": "🎧",
+    "Classical": "🎻",
+    "Indie": "🎭",
+    "Country": "🤠",
+    "Blues": "�"
+  };
+
+  // Add icons to genre data
+  const genres = genresData.map(genre => ({
+    ...genre,
+    icon: genreIcons[genre.name] || "�"
+  }));
 
   // Featured artists for each genre (sample data)
   const featuredArtists = {
@@ -48,26 +65,43 @@ export default function GenrePage() {
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {genres.map((genre) => (
-              <Link
-                href={`/genre/${genre.id}`}
-                key={genre.id}
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow group"
-              >
-                <div className="bg-[#1A2A3A] p-8 flex justify-center items-center">
-                  <span className="text-4xl">{genre.icon}</span>
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-[#1A2A3A] group-hover:text-[#00FFFF] transition-colors">
-                      {genre.name}
-                    </h3>
-                    <span className="text-[#00FFFF] font-bold">{genre.count}</span>
+            {genres && genres.length > 0 ? (
+              genres.map((genre) => (
+                <Link
+                  href={`/genre/songs?name=${encodeURIComponent(genre.name)}`}
+                  key={genre.id}
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow group"
+                >
+                  <div className="bg-[#1A2A3A] p-8 flex justify-center items-center">
+                    <span className="text-4xl">{genre.icon}</span>
                   </div>
-                  <p className="text-gray-500 text-sm mt-2">lagu tersedia</p>
+                  <div className="p-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-xl font-semibold text-[#1A2A3A] group-hover:text-[#00FFFF] transition-colors">
+                        {genre.name}
+                      </h3>
+                      <span className="text-[#00FFFF] font-bold">{Number(genre.count)}</span>
+                    </div>
+                    <p className="text-gray-500 text-sm mt-2">lagu tersedia</p>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              // Loading skeleton
+              Array.from({ length: 10 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg overflow-hidden shadow-md">
+                  <div className="bg-gray-200 p-8 flex justify-center items-center">
+                    <div className="w-8 h-8 bg-gray-300 rounded"></div>
+                  </div>
+                  <div className="p-6">
+                    <div className="animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
                 </div>
-              </Link>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -104,7 +138,7 @@ export default function GenrePage() {
                   ))}
                 </ul>
                 <Link
-                  href={`/genre/${genre.toLowerCase().replace(' ', '-')}`}
+                  href={`/genre/songs?name=${encodeURIComponent(genre)}`}
                   className="inline-block mt-6 text-[#00FFFF] hover:text-[#B0A0D0] transition-colors text-sm font-medium"
                 >
                   Lihat semua artis {genre} →

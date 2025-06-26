@@ -1,22 +1,21 @@
 import React from 'react';
 import Link from 'next/link';
+import { songAPI } from '@/lib/supabase';
 
-export default function PopularPage() {
-  // Sample popular chord data with more entries for this page
-  const popularChords = [
-    { id: 1, title: "Bintang di Surga", artist: "Peterpan", viewCount: 15420, difficulty: "Intermediate" },
-    { id: 2, title: "Kau Adalah", artist: "Isyana Sarasvati", viewCount: 12350, difficulty: "Easy" },
-    { id: 3, title: "Aku Milikmu", artist: "Iwan Fals", viewCount: 10980, difficulty: "Advanced" },
-    { id: 4, title: "Mencari Alasan", artist: "Exists", viewCount: 9875, difficulty: "Intermediate" },
-    { id: 5, title: "Seberapa Pantas", artist: "Sheila On 7", viewCount: 9540, difficulty: "Easy" },
-    { id: 6, title: "Seperti Kemarin", artist: "Noah", viewCount: 9320, difficulty: "Intermediate" },
-    { id: 7, title: "Laskar Pelangi", artist: "Nidji", viewCount: 8950, difficulty: "Easy" },
-    { id: 8, title: "Kangen", artist: "Dewa 19", viewCount: 8760, difficulty: "Intermediate" },
-    { id: 9, title: "Separuh Aku", artist: "Noah", viewCount: 8630, difficulty: "Intermediate" },
-    { id: 10, title: "Mungkin Nanti", artist: "Peterpan", viewCount: 8410, difficulty: "Advanced" },
-    { id: 11, title: "Jangan Menyerah", artist: "D'Masiv", viewCount: 8350, difficulty: "Intermediate" },
-    { id: 12, title: "Sempurna", artist: "Andra & The Backbone", viewCount: 8240, difficulty: "Easy" },
-  ];
+// Types
+type PopularSong = {
+  id: string;
+  slug?: string;
+  title: string;
+  artist_name: string;
+  difficulty: string;
+  genre_name: string;
+  view_count: number;
+};
+
+export default async function PopularPage() {
+  // Fetch popular songs from database
+  const { data: popularChords = [], error } = await songAPI.getPopularSongs(20);
 
   // Sample time periods for filtering
   const timePeriods = [
@@ -49,11 +48,10 @@ export default function PopularPage() {
               {timePeriods.map((period) => (
                 <button
                   key={period.id}
-                  className={`px-4 py-2 rounded-md ${
-                    period.id === "all-time" 
-                      ? "bg-[#1A2A3A] text-white" 
-                      : "bg-gray-100 text-[#1A2A3A] hover:bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 rounded-md ${period.id === "all-time"
+                    ? "bg-[#1A2A3A] text-white"
+                    : "bg-gray-100 text-[#1A2A3A] hover:bg-gray-200"
+                    }`}
                 >
                   {period.name}
                 </button>
@@ -74,41 +72,63 @@ export default function PopularPage() {
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {popularChords.map((chord) => (
-              <Link
-                href={`/chord/${chord.id}`}
-                key={chord.id}
-                className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="p-6 border-l-4 border-[#00FFFF]">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="text-xl font-semibold text-[#1A2A3A] mb-1">{chord.title}</h3>
-                      <p className="text-gray-600">{chord.artist}</p>
+            {popularChords && popularChords.length > 0 ? (
+              popularChords.map((chord) => (
+                <Link
+                  href={`/chord/${chord.slug || chord.id}`}
+                  key={chord.id}
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <div className="p-6 border-l-4 border-[#00FFFF]">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-xl font-semibold text-[#1A2A3A] mb-1">{chord.title}</h3>
+                        <p className="text-gray-600">{chord.artist_name}</p>
+                      </div>
+                      <span className="text-[#00FFFF] font-medium text-sm flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        </svg>
+                        {chord.view_count?.toLocaleString() || '0'}
+                      </span>
                     </div>
-                    <span className="text-[#00FFFF] font-medium text-sm flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                      </svg>
-                      {chord.viewCount.toLocaleString()}
-                    </span>
-                  </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="inline-block bg-[#E0E8EF] text-[#1A2A3A] text-sm px-3 py-1 rounded-full">
-                      {chord.difficulty}
-                    </span>
-                    <button className="text-sm text-[#1A2A3A] hover:text-[#00FFFF] transition-colors font-medium flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-                      </svg>
-                      Bagikan
-                    </button>
+                    <div className="flex justify-between items-center">
+                      <div className="flex space-x-2">
+                        <span className="inline-block bg-[#E0E8EF] text-[#1A2A3A] text-sm px-3 py-1 rounded-full">
+                          {chord.difficulty}
+                        </span>
+                        {chord.genre_name && (
+                          <span className="inline-block bg-[#B0A0D0] bg-opacity-30 text-[#1A2A3A] text-sm px-3 py-1 rounded-full">
+                            {chord.genre_name}
+                          </span>
+                        )}
+                      </div>
+                      <button className="text-sm text-[#1A2A3A] hover:text-[#00FFFF] transition-colors font-medium flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                        </svg>
+                        Bagikan
+                      </button>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg overflow-hidden shadow-md">
+                  <div className="p-6 border-l-4 border-[#00FFFF]">
+                    <div className="animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-3 w-3/4"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
                   </div>
                 </div>
-              </Link>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Pagination */}
@@ -144,7 +164,7 @@ export default function PopularPage() {
               <input
                 type="text"
                 placeholder="Cari judul lagu atau nama artis..."
-                className="w-full py-3 px-5 pr-12 rounded-md border-0 shadow-md focus:outline-none focus:ring-2 focus:ring-[#00FFFF]"
+                className="w-full py-3 px-5 pr-12 rounded-md border border-gray-300 bg-white shadow-md focus:outline-none focus:ring-2 focus:ring-[#00FFFF] text-[#1A2A3A] placeholder-gray-500"
               />
               <button
                 type="submit"

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Email Templates - Chording!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .template-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .template-header {
+            background: linear-gradient(135deg, #1A2A3A, #00FFFF);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .template-info {
+            padding: 15px;
+        }
+
+        .template-preview {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .template-preview iframe {
+            width: 100%;
+            height: 200px;
+            border: none;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #00FFFF;
+            color: #1A2A3A;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #B0A0D0;
+        }
+
+        .variables {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .variables strong {
+            color: #00FFFF;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; color: #1A2A3A;">
+                Chording<span style="color: #00FFFF;">!</span> Email Templates
+            </h1>
+            <p style="margin: 10px 0 0; color: #6c757d;">
+                Preview dan validasi template email untuk Supabase Auth
+            </p>
+        </div>
+
+        <div class="template-grid">
+            <!-- Confirm Sign Up -->
+            <div class="template-card">
+                <div class="template-header">
+                    <h3 style="margin: 0;">🎸 Confirm Sign Up</h3>
+                </div>
+                <div class="template-info">
+                    <p><strong>File:</strong> confirm-signup.html</p>
+                    <p><strong>Fungsi:</strong> Email konfirmasi pendaftaran akun baru</p>
+
+                    <div class="variables">
+                        <strong>Variabel Supabase:</strong><br>
+                        • {{ .SiteURL }}<br>
+                        • {{ .Email }}<br>
+                        • {{ .ConfirmationURL }}
+                    </div>
+
+                    <div class="template-preview">
+                        <iframe src="confirm-signup.html"></iframe>
+                    </div>
+
+                    <a href="confirm-signup.html" target="_blank" class="btn">Preview Full</a>
+                </div>
+            </div>
+
+            <!-- Invite User -->
+            <div class="template-card">
+                <div class="template-header">
+                    <h3 style="margin: 0;">👥 Invite User</h3>
+                </div>
+                <div class="template-info">
+                    <p><strong>File:</strong> invite-user.html</p>
+                    <p><strong>Fungsi:</strong> Email undangan bergabung ke platform</p>
+
+                    <div class="variables">
+                        <strong>Variabel Supabase:</strong><br>
+                        • {{ .SiteURL }}<br>
+                        • {{ .ConfirmationURL }}
+                    </div>
+
+                    <div class="template-preview">
+                        <iframe src="invite-user.html"></iframe>
+                    </div>
+
+                    <a href="invite-user.html" target="_blank" class="btn">Preview Full</a>
+                </div>
+            </div>
+
+            <!-- Magic Link -->
+            <div class="template-card">
+                <div class="template-header">
+                    <h3 style="margin: 0;">✨ Magic Link</h3>
+                </div>
+                <div class="template-info">
+                    <p><strong>File:</strong> magic-link.html</p>
+                    <p><strong>Fungsi:</strong> Email login tanpa password</p>
+
+                    <div class="variables">
+                        <strong>Variabel Supabase:</strong><br>
+                        • {{ .SiteURL }}<br>
+                        • {{ .Email }}<br>
+                        • {{ .ConfirmationURL }}
+                    </div>
+
+                    <div class="template-preview">
+                        <iframe src="magic-link.html"></iframe>
+                    </div>
+
+                    <a href="magic-link.html" target="_blank" class="btn">Preview Full</a>
+                </div>
+            </div>
+
+            <!-- Change Email -->
+            <div class="template-card">
+                <div class="template-header">
+                    <h3 style="margin: 0;">📧 Change Email</h3>
+                </div>
+                <div class="template-info">
+                    <p><strong>File:</strong> change-email.html</p>
+                    <p><strong>Fungsi:</strong> Email konfirmasi perubahan alamat email</p>
+
+                    <div class="variables">
+                        <strong>Variabel Supabase:</strong><br>
+                        • {{ .SiteURL }}<br>
+                        • {{ .Email }}<br>
+                        • {{ .NewEmail }}<br>
+                        • {{ .ConfirmationURL }}
+                    </div>
+
+                    <div class="template-preview">
+                        <iframe src="change-email.html"></iframe>
+                    </div>
+
+                    <a href="change-email.html" target="_blank" class="btn">Preview Full</a>
+                </div>
+            </div>
+
+            <!-- Reset Password -->
+            <div class="template-card">
+                <div class="template-header">
+                    <h3 style="margin: 0;">🔑 Reset Password</h3>
+                </div>
+                <div class="template-info">
+                    <p><strong>File:</strong> reset-password.html</p>
+                    <p><strong>Fungsi:</strong> Email reset password</p>
+
+                    <div class="variables">
+                        <strong>Variabel Supabase:</strong><br>
+                        • {{ .SiteURL }}<br>
+                        • {{ .Email }}<br>
+                        • {{ .ConfirmationURL }}
+                    </div>
+
+                    <div class="template-preview">
+                        <iframe src="reset-password.html"></iframe>
+                    </div>
+
+                    <a href="reset-password.html" target="_blank" class="btn">Preview Full</a>
+                </div>
+            </div>
+
+            <!-- Reauthentication -->
+            <div class="template-card">
+                <div class="template-header">
+                    <h3 style="margin: 0;">🛡️ Reauthentication</h3>
+                </div>
+                <div class="template-info">
+                    <p><strong>File:</strong> reauthentication.html</p>
+                    <p><strong>Fungsi:</strong> Email verifikasi identitas untuk tindakan sensitif</p>
+
+                    <div class="variables">
+                        <strong>Variabel Supabase:</strong><br>
+                        • {{ .SiteURL }}<br>
+                        • {{ .Email }}<br>
+                        • {{ .CreatedAt }}<br>
+                        • {{ .ConfirmationURL }}
+                    </div>
+
+                    <div class="template-preview">
+                        <iframe src="reauthentication.html"></iframe>
+                    </div>
+
+                    <a href="reauthentication.html" target="_blank" class="btn">Preview Full</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div
+            style="background: white; margin-top: 30px; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #1A2A3A; margin-top: 0;">📋 Cara Menggunakan</h2>
+            <ol style="color: #6c757d; line-height: 1.6;">
+                <li>Buka <a href="https://supabase.com/dashboard" target="_blank" style="color: #00FFFF;">Supabase
+                        Dashboard</a></li>
+                <li>Pilih project <strong>Chording</strong></li>
+                <li>Navigasi ke <strong>Authentication</strong> → <strong>Email Templates</strong></li>
+                <li>Pilih jenis template yang ingin diubah</li>
+                <li>Copy-paste kode HTML dari file yang sesuai</li>
+                <li>Klik <strong>Save</strong> untuk menyimpan</li>
+                <li>Test template dengan melakukan aksi yang sesuai (signup, reset password, dll.)</li>
+            </ol>
+
+            <h3 style="color: #1A2A3A;">🎨 Customization</h3>
+            <ul style="color: #6c757d; line-height: 1.6;">
+                <li><strong>Warna:</strong> Edit variabel CSS di bagian &lt;style&gt;</li>
+                <li><strong>Teks:</strong> Ubah konten dalam elemen HTML</li>
+                <li><strong>Link:</strong> Update link footer sesuai website</li>
+                <li><strong>Logo:</strong> Sesuaikan di bagian header</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

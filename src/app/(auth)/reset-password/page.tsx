@@ -2,22 +2,34 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { authAPI } from '@/lib/supabase';
 
 const ResetPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError('');
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log('Reset password for:', email);
-            setIsLoading(false);
+        try {
+            const { error: resetError } = await authAPI.resetPassword(email);
+
+            if (resetError) {
+                setError(resetError.message);
+                setIsLoading(false);
+                return;
+            }
+
             setIsSubmitted(true);
-        }, 1000);
+        } catch (err: any) {
+            setError('Terjadi kesalahan. Silakan coba lagi.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     if (isSubmitted) {
@@ -107,9 +119,23 @@ const ResetPasswordPage = () => {
                         <p className="text-sm text-gray-600">
                             Jangan khawatir! Masukkan email yang terdaftar dan kami akan mengirimkan link untuk reset password Anda.
                         </p>
-                    </div>
+                    </div>                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Error Message */}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-red-800">{error}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Email Field */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-[#1A2A3A] mb-2">
@@ -121,7 +147,10 @@ const ResetPasswordPage = () => {
                                 type="email"
                                 required
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => {
+                                    setEmail(e.target.value);
+                                    if (error) setError(''); // Clear error when user starts typing
+                                }}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent outline-none transition-colors"
                                 placeholder="Masukkan email Anda"
                             />

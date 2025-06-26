@@ -25,6 +25,42 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Custom Slider Styles */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #00FFFF;
+  cursor: pointer;
+  border: 2px solid #1A2A3A;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #B0A0D0;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #00FFFF;
+  cursor: pointer;
+  border: 2px solid #1A2A3A;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #B0A0D0;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
 /* Chord Highlighting Styles */
 .chord-highlight {
   color: #0f766e !important;
@@ -44,6 +80,23 @@ body {
   background-color: rgba(15, 118, 110, 0.2);
   transform: scale(1.05);
   border-color: rgba(15, 118, 110, 0.5);
+}
+
+/* Special styling for chord highlights within chord lines */
+.chord-line .chord-highlight {
+  background-color: rgba(15, 118, 110, 0.08);
+  border: none;
+  padding: 0 2px;
+  font-size: inherit;
+  font-weight: 700;
+  color: #059669;
+  /* Green-600 for better contrast */
+}
+
+.chord-line .chord-highlight:hover {
+  background-color: rgba(15, 118, 110, 0.15);
+  transform: none;
+  /* Don't scale in chord lines to preserve alignment */
 }
 
 .chord-content .chord-highlight {
@@ -85,17 +138,33 @@ body {
   display: block;
 }
 
-/* Lyrics text */
+/* Lyrics text - normal styling */
 .chord-content .lyrics-line {
   color: #2A3A4A !important;
   margin: 2px 0;
   font-size: 1em;
+  font-family: inherit;
+  /* Use normal font for lyrics */
+  line-height: 1.4;
 }
 
 /* Empty lines for spacing */
 .chord-content .empty-line {
   height: 8px;
   display: block;
+}
+
+/* Chord line styling - preserve spacing and positioning */
+.chord-content .chord-line {
+  color: #0f766e !important;
+  font-weight: 600;
+  margin: 2px 0;
+  font-size: 1em;
+  white-space: pre;
+  /* Preserve all whitespace including spaces */
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
 }
 
 /* Mobile optimization for chord content */
@@ -132,4 +201,103 @@ body {
   /* Teal-500 - lighter for dark background */
   background-color: rgba(20, 184, 166, 0.15);
   border-color: rgba(20, 184, 166, 0.4);
+}
+
+.dark .chord-line .chord-highlight {
+  color: #10b981;
+  /* Emerald-500 for dark mode */
+  background-color: rgba(16, 185, 129, 0.1);
+  border: none;
+}
+
+/* Dark mode support for chord lines */
+.dark .chord-content .chord-line {
+  color: #14b8a6 !important;
+}
+
+/* Chord dan Lyrics Styling */
+.chord-line {
+  color: #2563eb;
+  /* blue-600 */
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  white-space: pre;
+  /* Preservasi spacing asli */
+  line-height: 1.2;
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.lyrics-line {
+  color: #374151;
+  /* gray-700 */
+  line-height: 1.6;
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.chord-highlight {
+  background-color: #dbeafe;
+  /* blue-100 */
+  color: #1d4ed8;
+  /* blue-700 */
+  padding: 1px 2px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.section-header {
+  font-weight: bold;
+  color: #059669;
+  /* emerald-600 */
+  margin: 16px 0 8px 0;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+
+.empty-line {
+  height: 12px;
+}
+
+/* Dark mode support */
+.dark .chord-line {
+  color: #60a5fa;
+  /* blue-400 */
+}
+
+.dark .lyrics-line {
+  color: #d1d5db;
+  /* gray-300 */
+}
+
+.dark .chord-highlight {
+  background-color: #1e3a8a;
+  /* blue-900 */
+  color: #93c5fd;
+  /* blue-300 */
+}
+
+.dark .section-header {
+  color: #34d399;
+  /* emerald-400 */
+}
+
+/* Chord Controls Styling */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00FFFF;
+  cursor: pointer;
+  border: 2px solid #1A2A3A;
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00FFFF;
+  cursor: pointer;
+  border: 2px solid #1A2A3A;
 }

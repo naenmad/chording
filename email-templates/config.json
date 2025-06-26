@@ -1,0 +1,109 @@
+{
+    "project_name": "Chording!",
+    "brand_colors": {
+        "primary": "#00FFFF",
+        "secondary": "#B0A0D0",
+        "dark": "#1A2A3A",
+        "gradient_start": "#1A2A3A",
+        "gradient_middle": "#2A3A4A",
+        "gradient_end": "#1A2A3A"
+    },
+    "site_info": {
+        "name": "Chording!",
+        "tagline": "Platform Chord Gitar Terlengkap",
+        "description": "Platform chord gitar terlengkap untuk musisi Indonesia",
+        "domain": "chording.com",
+        "support_email": "support@chording.com"
+    },
+    "email_templates": [
+        {
+            "name": "Confirm Sign Up",
+            "file": "confirm-signup.html",
+            "supabase_type": "confirmation",
+            "description": "Email konfirmasi pendaftaran akun baru",
+            "variables": [
+                "SiteURL",
+                "Email",
+                "ConfirmationURL"
+            ]
+        },
+        {
+            "name": "Invite User",
+            "file": "invite-user.html",
+            "supabase_type": "invite",
+            "description": "Email undangan bergabung ke platform",
+            "variables": [
+                "SiteURL",
+                "ConfirmationURL"
+            ]
+        },
+        {
+            "name": "Magic Link",
+            "file": "magic-link.html",
+            "supabase_type": "magic_link",
+            "description": "Email login tanpa password",
+            "variables": [
+                "SiteURL",
+                "Email",
+                "ConfirmationURL"
+            ]
+        },
+        {
+            "name": "Change Email",
+            "file": "change-email.html",
+            "supabase_type": "email_change",
+            "description": "Email konfirmasi perubahan alamat email",
+            "variables": [
+                "SiteURL",
+                "Email",
+                "NewEmail",
+                "ConfirmationURL"
+            ]
+        },
+        {
+            "name": "Reset Password",
+            "file": "reset-password.html",
+            "supabase_type": "recovery",
+            "description": "Email reset password",
+            "variables": [
+                "SiteURL",
+                "Email",
+                "ConfirmationURL"
+            ]
+        },
+        {
+            "name": "Reauthentication",
+            "file": "reauthentication.html",
+            "supabase_type": "reauthentication",
+            "description": "Email verifikasi identitas untuk tindakan sensitif",
+            "variables": [
+                "SiteURL",
+                "Email",
+                "CreatedAt",
+                "ConfirmationURL"
+            ]
+        }
+    ],
+    "deployment": {
+        "instructions": [
+            "1. Buka Supabase Dashboard",
+            "2. Pilih project Chording",
+            "3. Navigasi ke Authentication > Email Templates",
+            "4. Pilih template type yang sesuai",
+            "5. Copy-paste HTML content",
+            "6. Klik Save untuk menyimpan"
+        ],
+        "testing": [
+            "Test confirm signup dengan mendaftar akun baru",
+            "Test reset password dari halaman login",
+            "Test magic link jika diaktifkan",
+            "Test invite user jika ada fitur undangan"
+        ]
+    },
+    "customization_guide": {
+        "colors": "Edit variabel CSS di bagian <style> setiap template",
+        "text": "Ubah konten dalam elemen HTML sesuai kebutuhan",
+        "links": "Update link footer sesuai dengan struktur website",
+        "branding": "Sesuaikan logo dan tagline di header"
+    }
+}
