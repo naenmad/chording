@@ -421,25 +421,43 @@ export const databaseAPI = {
 };
 
 // Song/Chord API functions
+// Note: Featured and Popular songs are now determined automatically:
+// - Featured: Top viewed songs from last 30 days (or all-time if insufficient recent data)
+// - Popular: Songs with minimum view count threshold (10+ views)
+// This prevents users from self-promoting and ensures quality content surfaces naturally
 export const songAPI = {
-    // Get featured songs for homepage
+    // Get featured songs for homepage (top viewed songs from last 30 days)
     getFeaturedSongs: async (limit: number = 4) => {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
         const { data, error } = await supabase
             .from('songs')
             .select('id, slug, title, artist_name, difficulty, view_count')
-            .eq('is_featured', true)
+            .gte('created_at', thirtyDaysAgo.toISOString())
             .order('view_count', { ascending: false })
             .limit(limit);
+
+        // If no recent songs have good view counts, fallback to all-time popular
+        if (!data || data.length < limit) {
+            const { data: fallbackData, error: fallbackError } = await supabase
+                .from('songs')
+                .select('id, slug, title, artist_name, difficulty, view_count')
+                .order('view_count', { ascending: false })
+                .limit(limit);
+
+            return { data: fallbackData, error: fallbackError };
+        }
 
         return { data, error };
     },
 
-    // Get popular songs
+    // Get popular songs (based on view count)
     getPopularSongs: async (limit: number = 12) => {
         const { data, error } = await supabase
             .from('songs')
             .select('id, slug, title, artist_name, difficulty, genre_name, view_count')
-            .eq('is_popular', true)
+            .gte('view_count', 10) // Only show songs with at least 10 views
             .order('view_count', { ascending: false })
             .limit(limit);
 
@@ -623,5 +641,109 @@ export const songAPI = {
             .eq('id', songId);
 
         return { error };
-    }
+    },
+
+    // Admin function to manually set featured status (if needed)
+    setFeaturedStatus: async (songId: string, isFeatured: boolean) => {
+        const { data, error } = await supabase
+            .from('songs')
+            .update({ is_featured: isFeatured, updated_at: new Date().toISOString() })
+            .eq('id', songId)
+            .select('id, title, is_featured')
+            .single();
+
+        return { data, error };
+    },
+
+    // Function to automatically update popular status based on view count
+    updatePopularStatus: async () => {
+        // Set songs with high view counts as popular
+        const { error: setPopularError } = await supabase
+            .from('songs')
+            .update({ is_popular: true })
+            .gte('view_count', 50); // Songs with 50+ views are considered popular
+
+        // Unset popular status for songs with low view counts
+        const { error: unsetPopularError } = await supabase
+            .from('songs')
+            .update({ is_popular: false })
+            .lt('view_count', 50);
+
+        return {
+            setPopularError,
+            unsetPopularError,
+            success: !setPopularError && !unsetPopularError
+        };
+    },
+
+    // Get website statistics
+    getWebsiteStats: async () => {
+        try {
+            // Get total songs count
+            const { count: totalSongs, error: songsError } = await supabase
+                .from('songs')
+                .select('*', { count: 'exact', head: true });
+
+            // Get total genres count
+            const { count: totalGenres, error: genresError } = await supabase
+                .from('genres')
+                .select('*', { count: 'exact', head: true });
+
+            // Get unique artists count (since artists can be comma-separated)
+            const { data: songsData, error: artistsError } = await supabase
+                .from('songs')
+                .select('artist_name');
+
+            let uniqueArtists = 0;
+            if (songsData && !artistsError) {
+                const allArtists = new Set<string>();
+                songsData.forEach(song => {
+                    if (song.artist_name) {
+                        // Split by comma and add each artist to the set
+                        song.artist_name.split(',').forEach((artist: string) => {
+                            allArtists.add(artist.trim());
+                        });
+                    }
+                });
+                uniqueArtists = allArtists.size;
+            }            // Get total users count from auth.users (this requires RLS policy or service role)
+            // For now, we'll use a placeholder or estimated count
+            // Note: In production, you'd need to set up a function or use service role for this
+            let totalUsers = 0;
+            try {
+                // Try to get user count - this might fail due to RLS policies
+                const { data: usersData } = await supabase.auth.admin.listUsers();
+                totalUsers = usersData?.users?.length || 0;
+            } catch (userError) {
+                // Fallback: estimate based on songs created (each song creator is a user)
+                const { data: userSongs } = await supabase
+                    .from('songs')
+                    .select('created_at')
+                    .not('created_at', 'is', null);
+
+                // Rough estimation: assume average user creates 2-3 songs
+                totalUsers = userSongs ? Math.ceil(userSongs.length / 2.5) : 50;
+            }
+
+            return {
+                data: {
+                    totalSongs: totalSongs || 0,
+                    totalGenres: totalGenres || 0,
+                    totalArtists: uniqueArtists,
+                    totalUsers: totalUsers
+                },
+                error: songsError || genresError || artistsError
+            };
+        } catch (error) {
+            return {
+                data: {
+                    totalSongs: 0,
+                    totalGenres: 0,
+                    totalArtists: 0,
+                    totalUsers: 0
+                },
+                error: error
+            };
+        }
+    },
 };

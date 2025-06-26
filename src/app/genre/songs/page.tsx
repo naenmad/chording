@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { songAPI } from '@/lib/supabase';
@@ -15,7 +15,7 @@ type Song = {
     view_count: number;
 };
 
-export default function GenreDetailPage() {
+function GenreDetailContent() {
     const searchParams = useSearchParams();
     const genreName = searchParams.get('name');
 
@@ -41,7 +41,7 @@ export default function GenreDetailPage() {
                 }
 
                 setSongs(data || []);
-            } catch (err) {
+            } catch {
                 setError('Terjadi kesalahan');
             } finally {
                 setLoading(false);
@@ -181,5 +181,22 @@ export default function GenreDetailPage() {
                 </div>
             </section>
         </div>
+    );
+}
+
+export default function GenreDetailPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="bg-[#E0E8EF] min-h-screen flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00FFFF] mx-auto mb-4"></div>
+                        <p className="text-[#1A2A3A]">Memuat...</p>
+                    </div>
+                </div>
+            }
+        >
+            <GenreDetailContent />
+        </Suspense>
     );
 }

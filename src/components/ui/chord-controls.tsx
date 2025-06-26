@@ -120,15 +120,15 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
         // All possible chord roots in chromatic order
         const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const flatEquivalents = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-        
+
         // Function to transpose a single chord
         const transposeSingleChord = (chord: string, semitones: number) => {
             if (!chord || chord.trim() === '') return chord;
-            
+
             // Extract the root note (first 1-2 characters)
             let root = '';
             let suffix = '';
-            
+
             if (chord.length >= 2 && (chord[1] === '#' || chord[1] === 'b')) {
                 root = chord.substring(0, 2);
                 suffix = chord.substring(2);
@@ -136,73 +136,74 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                 root = chord.substring(0, 1);
                 suffix = chord.substring(1);
             }
-            
+
             // Find current index in chromatic scale
             let currentIndex = chromaticScale.indexOf(root);
             if (currentIndex === -1) {
                 currentIndex = flatEquivalents.indexOf(root);
             }
-            
+
             if (currentIndex === -1) return chord; // Return unchanged if not found
-            
+
             // Calculate new index
-            let newIndex = (currentIndex + semitones + 12) % 12;
+            const newIndex = (currentIndex + semitones + 12) % 12;
             const newRoot = chromaticScale[newIndex];
-            
+
             return newRoot + suffix;
         };
-        
+
         // Calculate semitone change
         const semitones = direction === 'up' ? 1 : -1;
-          // Update the transpose key display and track steps
+        // Update the transpose key display and track steps
         const newTransposeKey = transposeSingleChord(transposeKey, semitones);
         const newSteps = transposeSteps + semitones;
         setTransposeKey(newTransposeKey);
         setTransposeSteps(newSteps);
-        
+
         // Find and transpose all chords in the page content
         const chordElements = document.querySelectorAll('[data-chord], .chord, .chord-symbol');
-        
+
         chordElements.forEach((element) => {
             const originalText = element.textContent || '';
             const chordRegex = /\b([A-G][#b]?(?:maj|min|m|M|sus|aug|dim|add|\d)*(?:\/[A-G][#b]?)?)\b/g;
-            
+
             const transposedText = originalText.replace(chordRegex, (match) => {
                 return transposeSingleChord(match, semitones);
             });
-            
+
             if (element.textContent !== transposedText) {
                 element.textContent = transposedText;
             }
         });
-        
+
         // Also update any chord content with class 'chord-content'
         const chordContent = document.querySelector('.chord-content');
-        if (chordContent) {            const walker = document.createTreeWalker(
+        if (chordContent) {
+            const walker = document.createTreeWalker(
                 chordContent,
                 NodeFilter.SHOW_TEXT
             );
-            
+
             const textNodes = [];
             let node;
             while (node = walker.nextNode()) {
                 textNodes.push(node);
             }
-            
+
             textNodes.forEach((textNode) => {
                 const originalText = textNode.textContent || '';
                 const chordRegex = /\b([A-G][#b]?(?:maj|min|m|M|sus|aug|dim|add|\d)*(?:\/[A-G][#b]?)?)\b/g;
-                
+
                 const transposedText = originalText.replace(chordRegex, (match) => {
                     return transposeSingleChord(match, semitones);
                 });
-                
+
                 if (textNode.textContent !== transposedText) {
                     textNode.textContent = transposedText;
                 }
             });
         }
-          // Dispatch custom event for other components to listen to
+        // Dispatch custom event for other components to listen to
         window.dispatchEvent(new CustomEvent('chordTransposed', {
             detail: {
                 direction,
@@ -217,26 +218,26 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
     // Reset transpose to original key
     const resetTranspose = () => {
         if (transposeSteps === 0) return; // Already at original
-        
+
         // Calculate how many semitones to go back to original
         const resetSemitones = -transposeSteps;
-        
+
         // Reset all chords in the page content
         const chordElements = document.querySelectorAll('[data-chord], .chord, .chord-symbol');
-        
+
         chordElements.forEach((element) => {
             const originalText = element.textContent || '';
             const chordRegex = /\b([A-G][#b]?(?:maj|min|m|M|sus|aug|dim|add|\d)*(?:\/[A-G][#b]?)?)\b/g;
-            
+
             const transposedText = originalText.replace(chordRegex, (match) => {
                 return transposeSingleChord(match, resetSemitones);
             });
-            
+
             if (element.textContent !== transposedText) {
                 element.textContent = transposedText;
             }
         });
-        
+
         // Also reset chord content
         const chordContent = document.querySelector('.chord-content');
         if (chordContent) {
@@ -244,51 +245,44 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                 chordContent,
                 NodeFilter.SHOW_TEXT
             );
-            
+
             const textNodes = [];
             let node;
             while (node = walker.nextNode()) {
                 textNodes.push(node);
             }
-            
+
             textNodes.forEach((textNode) => {
                 const originalText = textNode.textContent || '';
                 const chordRegex = /\b([A-G][#b]?(?:maj|min|m|M|sus|aug|dim|add|\d)*(?:\/[A-G][#b]?)?)\b/g;
-                
+
                 const transposedText = originalText.replace(chordRegex, (match) => {
                     return transposeSingleChord(match, resetSemitones);
                 });
-                
+
                 if (textNode.textContent !== transposedText) {
                     textNode.textContent = transposedText;
                 }
             });
         }
-        
+
         // Reset state
         setTransposeKey(currentKey);
-        setTransposeSteps(0);
-        
-        // Dispatch reset event
-        window.dispatchEvent(new CustomEvent('chordReset', {
-            detail: {
-                originalKey: currentKey,
-                resetSteps: resetSemitones
-            }
-        }));
     };
+
+    // Note: resetTranspose function removed as it was not being used
 
     // Helper function for transposing individual chords (moved here for reuse)
     const transposeSingleChord = (chord: string, semitones: number) => {
         if (!chord || chord.trim() === '') return chord;
-        
+
         const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         const flatEquivalents = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-        
+
         // Extract the root note (first 1-2 characters)
         let root = '';
         let suffix = '';
-        
+
         if (chord.length >= 2 && (chord[1] === '#' || chord[1] === 'b')) {
             root = chord.substring(0, 2);
             suffix = chord.substring(2);
@@ -296,21 +290,21 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
             root = chord.substring(0, 1);
             suffix = chord.substring(1);
         }
-        
+
         // Find current index in chromatic scale
         let currentIndex = chromaticScale.indexOf(root);
         if (currentIndex === -1) {
             currentIndex = flatEquivalents.indexOf(root);
         }
-        
+
         if (currentIndex === -1) return chord; // Return unchanged if not found
-        
+
         // Calculate new index
         let newIndex = (currentIndex + semitones + 12) % 12;
         const newRoot = chromaticScale[newIndex];
-        
+
         return newRoot + suffix;
-    };const toggleMenu = () => setIsOpen(!isOpen);
+    }; const toggleMenu = () => setIsOpen(!isOpen);
 
     return (
         <>
@@ -318,9 +312,8 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
             <div className="hidden lg:block fixed bottom-4 right-4 z-50">
                 <div className="flex flex-col items-end">
                     {/* Control Panels - More Compact */}
-                    <div className={`flex flex-col space-y-1.5 mb-2 transition-all duration-300 ${
-                        isOpen ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-6 pointer-events-none'
-                    }`}>
+                    <div className={`flex flex-col space-y-1.5 mb-2 transition-all duration-300 ${isOpen ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-6 pointer-events-none'
+                        }`}>
                         {/* Auto Scroll & Metronome Combined Panel */}
                         <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 border-l-4 border-[#00FFFF] w-44">
                             <div className="space-y-3">
@@ -335,11 +328,10 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                                         </span>
                                         <button
                                             onClick={toggleAutoScroll}
-                                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                                isAutoScrolling
+                                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${isAutoScrolling
                                                     ? 'bg-red-500 text-white hover:bg-red-600'
                                                     : 'bg-[#00FFFF] text-[#1A2A3A] hover:bg-[#B0A0D0]'
-                                            }`}
+                                                }`}
                                         >
                                             {isAutoScrolling ? 'Stop' : 'Start'}
                                         </button>
@@ -350,11 +342,10 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                                                 <button
                                                     key={speed}
                                                     onClick={() => adjustScrollSpeed(speed)}
-                                                    className={`flex-1 py-1 px-1 rounded text-xs ${
-                                                        scrollSpeed === speed
+                                                    className={`flex-1 py-1 px-1 rounded text-xs ${scrollSpeed === speed
                                                             ? 'bg-[#1A2A3A] text-white'
                                                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {speed}x
                                                 </button>
@@ -377,11 +368,10 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                                         </span>
                                         <button
                                             onClick={toggleMetronome}
-                                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                                isMetronomeRunning
+                                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${isMetronomeRunning
                                                     ? 'bg-red-500 text-white hover:bg-red-600'
                                                     : 'bg-[#00FFFF] text-[#1A2A3A] hover:bg-[#B0A0D0]'
-                                            }`}
+                                                }`}
                                         >
                                             {isMetronomeRunning ? '⏸' : '▶'} {isMetronomeRunning && '♪'}
                                         </button>
@@ -474,11 +464,10 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                                             <button
                                                 key={size}
                                                 onClick={() => changeFontSize(size)}
-                                                className={`py-1 px-1 rounded text-xs font-medium transition-colors ${
-                                                    fontSize === size
+                                                className={`py-1 px-1 rounded text-xs font-medium transition-colors ${fontSize === size
                                                         ? 'bg-[#B0A0D0] text-white'
                                                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                }`}
+                                                    }`}
                                             >
                                                 {label}
                                             </button>
@@ -492,9 +481,8 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                     {/* Desktop Toggle Button - Smaller */}
                     <button
                         onClick={toggleMenu}
-                        className={`w-12 h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center ${
-                            isOpen ? 'bg-[#00FFFF] text-[#1A2A3A]' : 'bg-[#1A2A3A] text-white'
-                        }`}
+                        className={`w-12 h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center ${isOpen ? 'bg-[#00FFFF] text-[#1A2A3A]' : 'bg-[#1A2A3A] text-white'
+                            }`}
                         title={isOpen ? "Close controls" : "Open chord controls"}
                     >
                         <svg
@@ -511,9 +499,8 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                 {/* Mobile Toggle Button - Smaller */}
                 <button
                     onClick={toggleMenu}
-                    className={`fixed bottom-4 right-4 w-11 h-11 rounded-full shadow-lg transition-all duration-300 z-50 flex items-center justify-center ${
-                        isOpen ? 'bg-[#00FFFF] text-[#1A2A3A]' : 'bg-[#1A2A3A] text-white'
-                    }`}
+                    className={`fixed bottom-4 right-4 w-11 h-11 rounded-full shadow-lg transition-all duration-300 z-50 flex items-center justify-center ${isOpen ? 'bg-[#00FFFF] text-[#1A2A3A]' : 'bg-[#1A2A3A] text-white'
+                        }`}
                     title={isOpen ? "Close controls" : "Open chord controls"}
                 >
                     <svg
@@ -526,9 +513,8 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                 </button>
 
                 {/* Compact Mobile Bottom Sheet */}
-                <div className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm rounded-t-xl shadow-2xl border-t-4 border-[#00FFFF] transition-transform duration-300 ${
-                    isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
-                }`}>
+                <div className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm rounded-t-xl shadow-2xl border-t-4 border-[#00FFFF] transition-transform duration-300 ${isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
+                    }`}>
                     {/* Handle bar */}
                     <div className="flex justify-center py-2">
                         <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
@@ -541,21 +527,19 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                             <div className="flex space-x-2">
                                 <button
                                     onClick={toggleAutoScroll}
-                                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                                        isAutoScrolling
+                                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${isAutoScrolling
                                             ? 'bg-red-500 text-white'
                                             : 'bg-[#00FFFF] text-[#1A2A3A]'
-                                    }`}
+                                        }`}
                                 >
                                     {isAutoScrolling ? 'Stop Scroll' : 'Scroll'}
                                 </button>
                                 <button
                                     onClick={toggleMetronome}
-                                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                                        isMetronomeRunning
+                                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${isMetronomeRunning
                                             ? 'bg-red-500 text-white'
                                             : 'bg-[#00FFFF] text-[#1A2A3A]'
-                                    }`}
+                                        }`}
                                 >
                                     {isMetronomeRunning ? '⏸' : '▶'} {bpm}
                                 </button>
@@ -588,11 +572,10 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                                             <button
                                                 key={speed}
                                                 onClick={() => adjustScrollSpeed(speed)}
-                                                className={`py-1 rounded text-xs ${
-                                                    scrollSpeed === speed
+                                                className={`py-1 rounded text-xs ${scrollSpeed === speed
                                                         ? 'bg-[#1A2A3A] text-white'
                                                         : 'bg-gray-200 text-gray-700'
-                                                }`}
+                                                    }`}
                                             >
                                                 {speed}x
                                             </button>
@@ -645,11 +628,10 @@ const ChordControls = ({ currentKey = "Am", tempo = "120 BPM" }: ChordControlsPr
                                         <button
                                             key={size}
                                             onClick={() => changeFontSize(size)}
-                                            className={`py-1 rounded text-xs font-medium ${
-                                                fontSize === size
+                                            className={`py-1 rounded text-xs font-medium ${fontSize === size
                                                     ? 'bg-[#B0A0D0] text-white'
                                                     : 'bg-gray-200 text-gray-700'
-                                            }`}
+                                                }`}
                                         >
                                             {label}
                                         </button>

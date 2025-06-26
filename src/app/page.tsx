@@ -1,32 +1,26 @@
 import Link from "next/link";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import { songAPI } from "@/lib/supabase";
+import { ChordSkeleton } from "@/components/ui/skeleton";
 // import HomeFloatingActions from "@/components/ui/home-floating-actions";
-
-// Types for our data
-type FeaturedSong = {
-  id: string;
-  slug?: string;
-  title: string;
-  artist_name: string;
-  difficulty: string;
-  view_count: number;
-};
-
-type Genre = {
-  id: string;
-  name: string;
-  count: number;
-};
 
 // Server Component - fetch data on server
 export default async function Home() {
   // Fetch featured songs from database
-  const { data: featuredChords = [], error: songsError } = await songAPI.getFeaturedSongs(4);
+  const { data: featuredChords = [] } = await songAPI.getFeaturedSongs(4);
 
   // Fetch genres with count from database
   const genresResponse = await songAPI.getGenresWithCount();
   const genres = genresResponse?.data || [];
+
+  // Fetch website statistics
+  const statsResponse = await songAPI.getWebsiteStats();
+  const stats = statsResponse?.data || {
+    totalSongs: 0,
+    totalGenres: 0,
+    totalArtists: 0,
+    totalUsers: 0
+  };
 
   return (
     <div className="bg-[#E0E8EF] min-h-screen">
@@ -41,9 +35,14 @@ export default async function Home() {
             Kumpulan chord gitar terlengkap untuk berbagai genre musik Indonesia dan Internasional.
           </p>
           <div className="flex justify-center">
-            <form className="w-full max-w-lg relative">
+            <form
+              action="/search"
+              method="GET"
+              className="w-full max-w-lg relative"
+            >
               <input
                 type="text"
+                name="q"
                 placeholder="Cari judul lagu atau nama artis..."
                 className="w-full py-3 px-5 pr-12 rounded-md border-0 bg-[#2A3A4A] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FFFF]"
               />
@@ -62,6 +61,105 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <OnboardingBanner />
       </div>
+
+      {/* Website Statistics Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold mb-8 text-[#1A2A3A] flex items-center">
+            Statistik Platform
+            <span className="ml-2 text-[#00FFFF]">📊</span>
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* Total Songs */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 hover:transform hover:-translate-y-1 border-t-4 border-[#00FFFF]">
+              <div className="p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-[#1A2A3A] mb-2 flex items-center justify-center">
+                  <span className="mr-2 text-[#00FFFF]">🎵</span>
+                  {stats.totalSongs.toLocaleString()}
+                </div>
+                <div className="text-base sm:text-lg font-semibold text-[#1A2A3A] mb-1">
+                  Lagu
+                </div>
+                <div className="text-sm text-gray-600">
+                  Chord tersedia
+                </div>
+              </div>
+            </div>
+
+            {/* Total Artists */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 hover:transform hover:-translate-y-1 border-t-4 border-[#B0A0D0]">
+              <div className="p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-[#1A2A3A] mb-2 flex items-center justify-center">
+                  <span className="mr-2 text-[#B0A0D0]">🎤</span>
+                  {stats.totalArtists.toLocaleString()}
+                </div>
+                <div className="text-base sm:text-lg font-semibold text-[#1A2A3A] mb-1">
+                  Artis
+                </div>
+                <div className="text-sm text-gray-600">
+                  Musisi terdaftar
+                </div>
+              </div>
+            </div>
+
+            {/* Total Genres */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 hover:transform hover:-translate-y-1 border-t-4 border-[#1A2A3A]">
+              <div className="p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-[#1A2A3A] mb-2 flex items-center justify-center">
+                  <span className="mr-2 text-[#1A2A3A]">🎼</span>
+                  {stats.totalGenres.toLocaleString()}
+                </div>
+                <div className="text-base sm:text-lg font-semibold text-[#1A2A3A] mb-1">
+                  Genre
+                </div>
+                <div className="text-sm text-gray-600">
+                  Kategori musik
+                </div>
+              </div>
+            </div>
+
+            {/* Total Users */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 hover:transform hover:-translate-y-1 border-t-4 border-[#00FFFF]">
+              <div className="p-6 text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-[#1A2A3A] mb-2 flex items-center justify-center">
+                  <span className="mr-2 text-[#00FFFF]">👥</span>
+                  {stats.totalUsers.toLocaleString()}+
+                </div>
+                <div className="text-base sm:text-lg font-semibold text-[#1A2A3A] mb-1">
+                  Pengguna
+                </div>
+                <div className="text-sm text-gray-600">
+                  Komunitas aktif
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-12 text-center">
+            <p className="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
+              Bergabunglah dengan ribuan musisi Indonesia yang telah menggunakan platform ini
+              untuk belajar dan berbagi chord lagu favorit mereka. Platform kami terus berkembang
+              dengan dukungan komunitas yang aktif.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="w-2 h-2 bg-[#00FFFF] rounded-full mr-2"></span>
+                Diperbarui setiap hari
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="w-2 h-2 bg-[#B0A0D0] rounded-full mr-2"></span>
+                Komunitas aktif
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="w-2 h-2 bg-[#1A2A3A] rounded-full mr-2"></span>
+                Gratis selamanya
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Featured Chords Section */}
       <section className="py-16 px-4">
@@ -94,20 +192,9 @@ export default async function Home() {
                 </Link>
               ))
             ) : (
-              // Fallback content when no data
+              // Loading skeleton when no data
               Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-lg overflow-hidden shadow-md"
-                >
-                  <div className="p-6 border-t-4 border-[#00FFFF]">
-                    <div className="animate-pulse">
-                      <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-3 w-3/4"></div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    </div>
-                  </div>
-                </div>
+                <ChordSkeleton key={index} />
               ))
             )}
           </div>
@@ -133,7 +220,7 @@ export default async function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {genres && genres.length > 0 ? (
-              genres.slice(0, 6).map((genre: any) => (
+              genres.slice(0, 6).map((genre: { id: string; name: string; count: unknown }) => (
                 <Link
                   href={`/genre/songs?name=${encodeURIComponent(genre.name)}`}
                   key={genre.id}

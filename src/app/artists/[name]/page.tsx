@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { songAPI } from '@/lib/supabase';
 
@@ -16,18 +16,19 @@ type Song = {
 };
 
 interface ArtistDetailPageProps {
-    params: {
+    params: Promise<{
         name: string;
-    };
+    }>;
 }
 
 export default function ArtistDetailPage({ params }: ArtistDetailPageProps) {
+    const resolvedParams = use(params);
     const [songs, setSongs] = useState<Song[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     // Convert URL slug back to artist name
-    const artistName = decodeURIComponent(params.name).replace(/-/g, ' ');
+    const artistName = decodeURIComponent(resolvedParams.name).replace(/-/g, ' ');
     const formattedArtistName = artistName.replace(/\b\w/g, l => l.toUpperCase());
 
     useEffect(() => {
@@ -42,7 +43,7 @@ export default function ArtistDetailPage({ params }: ArtistDetailPageProps) {
                 }
 
                 setSongs(data || []);
-            } catch (err) {
+            } catch {
                 setError('Terjadi kesalahan');
             } finally {
                 setLoading(false);

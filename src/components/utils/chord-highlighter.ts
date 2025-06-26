@@ -75,7 +75,7 @@ const isSectionHeader = (line: string): boolean => {
     const sectionKeywords = [
         'intro', 'verse', 'chorus', 'bridge', 'outro', 'refrain',
         'pre-chorus', 'interlude', 'solo', 'coda', 'reff',
-        'bait', 'reff', 'bridge'
+        'bait', 'reff', 'bridge', 'overtune'
     ];
 
     const lowerLine = line.toLowerCase();

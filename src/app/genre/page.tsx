@@ -2,16 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { songAPI } from '@/lib/supabase';
 
-// Types
-type Genre = {
-  id: string;
-  name: string;
-  count: number;
-};
-
 export default async function GenrePage() {
   // Fetch genres from database
-  const { data: genresData = [], error } = await songAPI.getGenresWithCount();
+  const { data: genresData = [] } = await songAPI.getGenresWithCount();
 
   // Add icons for genres
   const genreIcons: { [key: string]: string } = {

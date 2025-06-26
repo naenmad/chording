@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/components/auth/UserProfile';
 import { authAPI } from '@/lib/supabase';
 
@@ -35,9 +34,10 @@ const Navbar = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle search functionality here
-    console.log('Searching for:', searchQuery);
-    // You would typically redirect to search results page
+    if (searchQuery.trim()) {
+      // Redirect to search page with query
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+    }
   };
 
   const toggleMenu = () => {

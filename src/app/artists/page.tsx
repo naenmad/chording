@@ -2,15 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { songAPI } from '@/lib/supabase';
 
-// Types
-type Artist = {
-  name: string;
-  songCount: number;
-};
-
 export default async function ArtistsPage() {
   // Fetch artists from database
-  const { data: artistsData = [], error } = await songAPI.getAllArtists();
+  const { data: artistsData = [] } = await songAPI.getAllArtists();
 
   // Get genres from database for filter
   const { data: genresData = [] } = await songAPI.getGenresWithCount();

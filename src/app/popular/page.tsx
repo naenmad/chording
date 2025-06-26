@@ -2,20 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { songAPI } from '@/lib/supabase';
 
-// Types
-type PopularSong = {
-  id: string;
-  slug?: string;
-  title: string;
-  artist_name: string;
-  difficulty: string;
-  genre_name: string;
-  view_count: number;
-};
-
 export default async function PopularPage() {
   // Fetch popular songs from database
-  const { data: popularChords = [], error } = await songAPI.getPopularSongs(20);
+  const { data: popularChords = [] } = await songAPI.getPopularSongs(20);
 
   // Sample time periods for filtering
   const timePeriods = [

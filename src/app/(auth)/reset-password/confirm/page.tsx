@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authAPI } from '@/lib/supabase';
 
-const ResetPasswordConfirmPage = () => {
+const ResetPasswordConfirmContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [formData, setFormData] = useState({
@@ -240,6 +240,18 @@ const ResetPasswordConfirmPage = () => {
                 </div>
             </div>
         </div>
+    );
+};
+
+const ResetPasswordConfirmPage = () => {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gradient-to-br from-[#1A2A3A] via-[#2A3A4A] to-[#1A2A3A] flex items-center justify-center">
+                <div className="text-white text-lg">Loading...</div>
+            </div>
+        }>
+            <ResetPasswordConfirmContent />
+        </Suspense>
     );
 };
 

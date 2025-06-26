@@ -13,6 +13,8 @@ export default function AddChordPage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [genres, setGenres] = useState<string[]>([]);
+    const [existingArtists, setExistingArtists] = useState<string[]>([]);
+    const [showArtistSuggestions, setShowArtistSuggestions] = useState(false);
     const router = useRouter();
 
     // Form state
@@ -26,9 +28,7 @@ export default function AddChordPage() {
         tempo: '',
         duration: '',
         lyrics: '',
-        spotify_url: '',
-        is_featured: false,
-        is_popular: false
+        spotify_url: ''
     });
 
     // Preview state
@@ -51,6 +51,13 @@ export default function AddChordPage() {
                     const genreNames = genresResponse.data.map((g: any) => g.name);
                     setGenres(genreNames);
                 }
+
+                // Fetch existing artists for autocomplete
+                const artistsResponse = await songAPI.getAllArtists();
+                if (artistsResponse?.data) {
+                    const artistNames = artistsResponse.data.map((a: any) => a.name);
+                    setExistingArtists(artistNames);
+                }
             } catch (error) {
                 console.error('Auth error:', error);
                 router.push('/login?redirect=/add-chord');
@@ -71,6 +78,43 @@ export default function AddChordPage() {
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
+
+        // Show artist suggestions when typing in artist field
+        if (name === 'artist_name') {
+            setShowArtistSuggestions(value.length > 0);
+        }
+    };
+
+    // Handle artist suggestion selection
+    const handleArtistSuggestion = (artistName: string) => {
+        const currentArtists = formData.artist_name.split(',').map(a => a.trim()).filter(a => a.length > 0);
+        const lastArtist = currentArtists[currentArtists.length - 1] || '';
+
+        // If there's a partial artist being typed, replace it
+        if (lastArtist && !existingArtists.includes(lastArtist)) {
+            currentArtists[currentArtists.length - 1] = artistName;
+        } else {
+            currentArtists.push(artistName);
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            artist_name: currentArtists.join(', ')
+        }));
+        setShowArtistSuggestions(false);
+    };
+
+    // Filter artist suggestions based on input
+    const getFilteredArtistSuggestions = () => {
+        if (!formData.artist_name) return [];
+
+        const currentArtists = formData.artist_name.split(',').map(a => a.trim()).filter(a => a.length > 0);
+        const lastArtist = currentArtists[currentArtists.length - 1] || '';
+
+        return existingArtists.filter(artist =>
+            artist.toLowerCase().includes(lastArtist.toLowerCase()) &&
+            !currentArtists.includes(artist)
+        ).slice(0, 5); // Limit to 5 suggestions
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +180,12 @@ export default function AddChordPage() {
                     artist_name: processedArtistName, // Use processed artist name
                     spotify_url: spotifyId, // Store only Spotify ID, not full URL
                     view_count: 0,
+                    // Note: is_featured and is_popular are determined automatically by the system:
+                    // - is_featured: based on view count and recent activity (last 30 days)
+                    // - is_popular: based on view count threshold (minimum 10 views)
+                    // This prevents users from manually marking their own songs as featured/popular
+                    is_featured: false, // Default to false, can be set by admin later
+                    is_popular: false, // Will be determined by algorithm based on views/engagement
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 }])
@@ -154,6 +204,9 @@ export default function AddChordPage() {
                             artist_name: processedArtistName,
                             spotify_url: spotifyId,
                             view_count: 0,
+                            // Automatic determination for featured/popular status
+                            is_featured: false,
+                            is_popular: false,
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         }])
@@ -262,18 +315,38 @@ export default function AddChordPage() {
                                 <label htmlFor="artist_name" className="block text-sm font-medium text-[#1A2A3A] mb-2">
                                     Nama Artis *
                                 </label>
-                                <input
-                                    type="text"
-                                    id="artist_name"
-                                    name="artist_name"
-                                    value={formData.artist_name}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent text-[#1A2A3A]"
-                                    placeholder="Contoh: Sheila on 7, Raisa, Tulus"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        id="artist_name"
+                                        name="artist_name"
+                                        value={formData.artist_name}
+                                        onChange={handleInputChange}
+                                        onFocus={() => setShowArtistSuggestions(formData.artist_name.length > 0)}
+                                        onBlur={() => setTimeout(() => setShowArtistSuggestions(false), 200)}
+                                        required
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent text-[#1A2A3A]"
+                                        placeholder="Contoh: Sheila on 7, Raisa, Tulus"
+                                    />
+
+                                    {/* Artist Suggestions Dropdown */}
+                                    {showArtistSuggestions && getFilteredArtistSuggestions().length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                                            {getFilteredArtistSuggestions().map((artist, index) => (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    onClick={() => handleArtistSuggestion(artist)}
+                                                    className="w-full px-4 py-2 text-left text-[#1A2A3A] hover:bg-[#E0E8EF] focus:bg-[#E0E8EF] focus:outline-none transition-colors"
+                                                >
+                                                    <span className="font-medium">{artist}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 <p className="text-sm text-gray-600 mt-1">
-                                    Untuk beberapa artis, pisahkan dengan koma. Contoh: "Artis 1, Artis 2, Artis 3"
+                                    Untuk beberapa artis, pisahkan dengan koma. Mulai ketik untuk melihat saran artis yang sudah ada.
                                 </p>
                                 {formData.artist_name && formData.artist_name.includes(',') && (
                                     <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
@@ -301,18 +374,16 @@ export default function AddChordPage() {
                                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent text-[#1A2A3A]"
                                 >
                                     <option value="">Pilih Genre</option>
+                                    {/* Genres from database first */}
                                     {genres.map((genre) => (
                                         <option key={genre} value={genre}>{genre}</option>
                                     ))}
-                                    <option value="Pop">Pop</option>
-                                    <option value="Rock">Rock</option>
-                                    <option value="Jazz">Jazz</option>
-                                    <option value="Folk">Folk</option>
-                                    <option value="Dangdut">Dangdut</option>
-                                    <option value="Alternative">Alternative</option>
-                                    <option value="R&B">R&B</option>
-                                    <option value="Country">Country</option>
-                                    <option value="Blues">Blues</option>
+                                    {/* Common genres fallback (only show if not already in database) */}
+                                    {['Pop', 'Rock', 'Ballad', 'Jazz', 'Folk', 'Acoustic', 'Dangdut', 'Alternative', 'Indie', 'R&B', 'Soul', 'Reggae', 'Ska', 'Punk', 'Metal', 'Hip Hop', 'Rap', 'Electronic', 'EDM', 'Classical', 'Country', 'Blues', 'Gospel', 'Spiritual', 'Keroncong', 'Campursari', 'Slow Rock', 'Love Song', 'Soundtrack', 'Instrumental', 'World Music', 'Latin', 'Bossa Nova', 'Fusion', 'Progressive', 'Experimental'].map((genre) => (
+                                        !genres.includes(genre) && (
+                                            <option key={genre} value={genre}>{genre}</option>
+                                        )
+                                    ))}
                                 </select>
                             </div>
 
@@ -342,15 +413,41 @@ export default function AddChordPage() {
                                 <label htmlFor="key_signature" className="block text-sm font-medium text-[#1A2A3A] mb-2">
                                     Kunci Dasar
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     id="key_signature"
                                     name="key_signature"
                                     value={formData.key_signature}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent text-[#1A2A3A]"
-                                    placeholder="Contoh: C, Am, G"
-                                />
+                                >
+                                    <option value="">Pilih Kunci Dasar</option>
+                                    {/* Major Keys */}
+                                    <option value="C">C Major</option>
+                                    <option value="C#">C# Major</option>
+                                    <option value="D">D Major</option>
+                                    <option value="D#">D# Major</option>
+                                    <option value="E">E Major</option>
+                                    <option value="F">F Major</option>
+                                    <option value="F#">F# Major</option>
+                                    <option value="G">G Major</option>
+                                    <option value="G#">G# Major</option>
+                                    <option value="A">A Major</option>
+                                    <option value="A#">A# Major</option>
+                                    <option value="B">B Major</option>
+                                    {/* Minor Keys */}
+                                    <option value="Am">A Minor</option>
+                                    <option value="A#m">A# Minor</option>
+                                    <option value="Bm">B Minor</option>
+                                    <option value="Cm">C Minor</option>
+                                    <option value="C#m">C# Minor</option>
+                                    <option value="Dm">D Minor</option>
+                                    <option value="D#m">D# Minor</option>
+                                    <option value="Em">E Minor</option>
+                                    <option value="Fm">F Minor</option>
+                                    <option value="F#m">F# Minor</option>
+                                    <option value="Gm">G Minor</option>
+                                    <option value="G#m">G# Minor</option>
+                                </select>
                             </div>
 
                             <div>
@@ -516,39 +613,6 @@ Yang tak akan pernah pergi..."
                                             </p>
                                         </div>
                                     )}
-                                </div>
-                            </div>
-
-                            {/* Options */}
-                            <div className="md:col-span-2 mt-8">
-                                <h2 className="text-2xl font-semibold text-[#1A2A3A] mb-6">Pengaturan</h2>
-                                <div className="space-y-4">
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="is_featured"
-                                            name="is_featured"
-                                            checked={formData.is_featured}
-                                            onChange={handleInputChange}
-                                            className="h-4 w-4 text-[#00FFFF] focus:ring-[#00FFFF] border-gray-300 rounded"
-                                        />
-                                        <label htmlFor="is_featured" className="ml-2 block text-sm text-[#1A2A3A]">
-                                            Tampilkan sebagai chord pilihan di homepage
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id="is_popular"
-                                            name="is_popular"
-                                            checked={formData.is_popular}
-                                            onChange={handleInputChange}
-                                            className="h-4 w-4 text-[#00FFFF] focus:ring-[#00FFFF] border-gray-300 rounded"
-                                        />
-                                        <label htmlFor="is_popular" className="ml-2 block text-sm text-[#1A2A3A]">
-                                            Masukkan ke daftar chord populer
-                                        </label>
-                                    </div>
                                 </div>
                             </div>
                         </div>

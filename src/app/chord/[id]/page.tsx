@@ -5,17 +5,20 @@ import { notFound, redirect } from "next/navigation";
 import ChordControls from "@/components/ui/chord-controls";
 import ChordDiagram from "@/components/ui/chord-diagram";
 import SpotifyPlayer from "@/components/ui/spotify-player";
+import CopyButton from "@/components/ui/copy-button";
+import ShareButton from "@/components/ui/share-button";
 import { highlightChords } from '@/components/utils/chord-highlighter';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { songAPI } from '@/lib/supabase';
 
 interface ChordPageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export default function ChordPage({ params }: ChordPageProps) {
+    const resolvedParams = use(params);
     const [chordData, setChordData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null); useEffect(() => {
@@ -24,12 +27,12 @@ export default function ChordPage({ params }: ChordPageProps) {
                 setLoading(true);
 
                 // Try to fetch by slug first (SEO-friendly URLs)
-                let response = await songAPI.getSongBySlug(params.id);
+                let response = await songAPI.getSongBySlug(resolvedParams.id);
                 let accessedViaId = false;
 
                 // If slug fails, try as ID (for backward compatibility)
                 if (response.error || !response.data) {
-                    response = await songAPI.getSongById(params.id);
+                    response = await songAPI.getSongById(resolvedParams.id);
                     accessedViaId = true;
                 }
 
@@ -56,7 +59,7 @@ export default function ChordPage({ params }: ChordPageProps) {
         };
 
         fetchChordData();
-    }, [params.id]);
+    }, [resolvedParams.id]);
 
     if (loading) {
         return (
@@ -193,6 +196,21 @@ export default function ChordPage({ params }: ChordPageProps) {
                                     </span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <CopyButton
+                                text={chordData.chord_content || ''}
+                                className="text-sm"
+                            >
+                                Salin Chord
+                            </CopyButton>
+                            <ShareButton
+                                title={`${chordData.title} - ${chordData.artist_name}`}
+                                text={`Chord ${chordData.title} by ${chordData.artist_name} di Chording!`}
+                                className="text-sm"
+                            />
                         </div>
                     </div>
                 </div>
