@@ -71,7 +71,7 @@ CREATE POLICY "profiles_select_policy" ON public.profiles
 
 DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
 CREATE POLICY "profiles_insert_policy" ON public.profiles
-    FOR INSERT WITH CHECK (auth.uid() = id);
+    FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;  
 CREATE POLICY "profiles_update_policy" ON public.profiles

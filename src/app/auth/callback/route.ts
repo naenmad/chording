@@ -24,18 +24,8 @@ export async function GET(request: NextRequest) {
             let redirectUrl = next;
 
             if (!profile?.onboarding_completed) {
-                // Create initial profile if it doesn't exist
-                await supabase
-                    .from('profiles')
-                    .upsert({
-                        id: data.user.id,
-                        full_name: data.user.user_metadata?.full_name || '',
-                        email: data.user.email || '',
-                        onboarding_completed: false,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-
+                // Profile will be created automatically by trigger
+                // Just redirect to onboarding
                 redirectUrl = '/onboarding';
             }
 

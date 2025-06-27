@@ -34,27 +34,7 @@ export const authAPI = {
             }
         });
 
-        if (error) return { data, error };
-
-        // Create profile after successful signup
-        if (data.user) {
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert([
-                    {
-                        id: data.user.id,
-                        email: email,
-                        full_name: fullName || '',
-                        role: 'user', // Default role
-                        onboarding_completed: false,
-                    }
-                ]);
-
-            if (profileError) {
-                console.error('Error creating profile:', profileError);
-            }
-        }
-
+        // No need to manually create profile - trigger will handle it
         return { data, error };
     },
 
