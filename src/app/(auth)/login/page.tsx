@@ -120,7 +120,7 @@ const LoginPage = () => {
                                 required
                                 value={formData.email}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent outline-none transition-colors"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent outline-none transition-colors text-gray-900 placeholder-gray-500"
                                 placeholder="Masukkan email Anda"
                             />
                         </div>
@@ -138,7 +138,7 @@ const LoginPage = () => {
                                     required
                                     value={formData.password}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent outline-none transition-colors"
+                                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#00FFFF] focus:border-transparent outline-none transition-colors text-gray-900 placeholder-gray-500"
                                     placeholder="Masukkan password Anda"
                                 />
                                 <button

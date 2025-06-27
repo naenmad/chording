@@ -25,6 +25,16 @@ export interface Song {
     updated_at?: string;
 }
 
+export interface UserProfile {
+    id: string;
+    email?: string;
+    full_name?: string;
+    role?: 'admin' | 'user';
+    onboarding_completed?: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface Genre {
     name: string;
     description?: string;

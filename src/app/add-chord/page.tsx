@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { songAPI } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { songAPI, supabase } from '@/lib/supabase';
+import { useAdminAuth } from '@/hooks/useAuth';
 import { highlightChords } from '@/components/utils/chord-highlighter';
 
 export default function AddChordPage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { user, profile, isAdmin, hasAdminAccess, loading } = useAdminAuth();
     const [submitting, setSubmitting] = useState(false);
     const [genres, setGenres] = useState<string[]>([]);
     const [existingArtists, setExistingArtists] = useState<string[]>([]);
@@ -34,17 +32,24 @@ export default function AddChordPage() {
     // Preview state
     const [showPreview, setShowPreview] = useState(false);
 
-    // Check authentication status
+    // Check authentication and admin status
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    router.push('/login?redirect=/add-chord');
-                    return;
-                }
-                setUser(user);
+        if (loading) return; // Wait for auth check to complete
 
+        if (!user) {
+            router.push('/login?redirect=/add-chord');
+            return;
+        }
+
+        if (!isAdmin) {
+            // Redirect non-admin users to home with error message
+            router.push('/?error=admin_required');
+            return;
+        }
+
+        // User is authenticated and is admin, proceed with loading data
+        const loadData = async () => {
+            try {
                 // Fetch existing genres
                 const genresResponse = await songAPI.getGenresWithCount();
                 if (genresResponse?.data) {
@@ -59,15 +64,48 @@ export default function AddChordPage() {
                     setExistingArtists(artistNames);
                 }
             } catch (error) {
-                console.error('Auth error:', error);
-                router.push('/login?redirect=/add-chord');
-            } finally {
-                setLoading(false);
+                console.error('Error loading data:', error);
             }
         };
 
-        checkAuth();
-    }, [router]);
+        loadData();
+    }, [user, isAdmin, loading, router]);
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#1A2A3A] via-[#2A3A4A] to-[#1A2A3A] flex items-center justify-center">
+                <div className="text-white text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    // Show access denied if not admin
+    if (!hasAdminAccess) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#1A2A3A] via-[#2A3A4A] to-[#1A2A3A] flex items-center justify-center">
+                <div className="bg-white rounded-lg shadow-xl p-8 border-t-4 border-red-500 text-center max-w-md">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-semibold text-[#1A2A3A] mb-4">
+                        Access Denied
+                    </h2>
+                    <p className="text-gray-600 mb-6">
+                        You need admin privileges to access this page.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center px-4 py-2 bg-[#00FFFF] text-[#1A2A3A] rounded-lg font-semibold hover:bg-[#B0A0D0] transition-colors"
+                    >
+                        Go to Home
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;

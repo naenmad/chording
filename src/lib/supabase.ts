@@ -1,15 +1,27 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
+import { Song, UserProfile } from '@/types/database';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'your-supabase-url';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-supabase-anon-key';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Export createClient function for pages that need to create their own client
-export const createSupabaseClient = () => createClient(supabaseUrl, supabaseAnonKey)
+// Helper function to create a new Supabase client (for server-side usage)
+export const createSupabaseClient = () => {
+    return createClient(supabaseUrl, supabaseAnonKey);
+};
 
-// Auth helpers
+// Authentication API
 export const authAPI = {
+    // Sign in with email and password
+    signIn: async (email: string, password: string) => {
+        return await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+    },
+
     // Sign up with email and password
     signUp: async (email: string, password: string, fullName?: string) => {
         const { data, error } = await supabase.auth.signUp({
@@ -17,371 +29,205 @@ export const authAPI = {
             password,
             options: {
                 data: {
-                    full_name: fullName,
+                    full_name: fullName || '',
                 }
             }
-        })
-        return { data, error }
-    },
+        });
 
-    // Sign in with email and password
-    signIn: async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        })
-        return { data, error }
-    },
+        if (error) return { data, error };
 
-    // Sign out
-    signOut: async () => {
-        const { error } = await supabase.auth.signOut()
-        return { error }
-    },
-
-    // Reset password
-    resetPassword: async (email: string) => {
-        const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password/confirm`,
-        })
-        return { data, error }
-    },
-
-    // Update password (for reset password flow)
-    updatePassword: async (newPassword: string) => {
-        const { data, error } = await supabase.auth.updateUser({
-            password: newPassword
-        })
-        return { data, error }
-    },
-
-    // Get current user
-    getCurrentUser: async () => {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        return { user, error }
-    },
-
-    // Sign in with OAuth (Google, Facebook, etc.)
-    signInWithOAuth: async (provider: 'google' | 'facebook') => {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`
-            }
-        })
-        return { data, error }
-    },    // Check if user has completed onboarding
-    checkOnboardingStatus: async (userId: string) => {
-        try {
-            const { data, error } = await supabase
+        // Create profile after successful signup
+        if (data.user) {
+            const { error: profileError } = await supabase
                 .from('profiles')
-                .select('onboarding_completed')
-                .eq('id', userId)
-                .single();
-
-            if (error) {
-                if (error.code === 'PGRST116') {
-                    // User profile not found, create initial profile
-                    console.log('Profile not found, creating initial profile');
-                    const { error: createError } = await supabase
-                        .from('profiles')
-                        .insert({
-                            id: userId,
-                            onboarding_completed: false,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        });
-
-                    if (createError) {
-                        console.error('Error creating initial profile:', createError);
+                .insert([
+                    {
+                        id: data.user.id,
+                        email: email,
+                        full_name: fullName || '',
+                        role: 'user', // Default role
+                        onboarding_completed: false,
                     }
+                ]);
 
-                    return { onboarding_completed: false, error: null };
-                } else if (error.code === '42703') {
-                    // Column doesn't exist, assume onboarding not completed
-                    console.warn('onboarding_completed column not found in profiles table');
-                    return { onboarding_completed: false, error: null };
-                } else {
-                    console.error('Error checking onboarding status:', error);
-                    return { onboarding_completed: false, error };
-                }
+            if (profileError) {
+                console.error('Error creating profile:', profileError);
             }
-
-            return {
-                onboarding_completed: data?.onboarding_completed || false,
-                error: null
-            };
-        } catch (error) {
-            console.error('Error in checkOnboardingStatus:', error);
-            return { onboarding_completed: false, error: null };
         }
-    },
-
-    // Create initial profile record
-    createInitialProfile: async (userId: string, userData: any) => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: userId,
-                    full_name: userData.full_name || '',
-                    email: userData.email || '',
-                    onboarding_completed: false,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-
-            return { data, error };
-        } catch (error) {
-            console.error('Error creating initial profile:', error);
-            return { data: null, error };
-        }
-    },    // Debug utility to test database connectivity and permissions
-    debugDatabaseAccess: async (userId: string) => {
-        const results: {
-            canAccessProfiles: boolean;
-            canAccessUserPreferences: boolean;
-            profileExists: boolean;
-            userPreferencesExist: boolean;
-            currentUser: any;
-            errors: string[];
-        } = {
-            canAccessProfiles: false,
-            canAccessUserPreferences: false,
-            profileExists: false,
-            userPreferencesExist: false,
-            currentUser: null,
-            errors: []
-        };
-
-        try {
-            // Test current user
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            results.currentUser = user;
-            if (userError) results.errors.push(`User auth error: ${userError.message}`);
-
-            // Test profiles table access
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('count', { count: 'exact', head: true });
-                results.canAccessProfiles = !error;
-                if (error) results.errors.push(`Profiles access error: ${error.message}`);
-            } catch (e) {
-                results.errors.push(`Profiles table error: ${e}`);
-            }
-
-            // Test user_preferences table access
-            try {
-                const { data, error } = await supabase
-                    .from('user_preferences')
-                    .select('count', { count: 'exact', head: true });
-                results.canAccessUserPreferences = !error;
-                if (error) results.errors.push(`User preferences access error: ${error.message}`);
-            } catch (e) {
-                results.errors.push(`User preferences table error: ${e}`);
-            }
-
-            // Check if user profile exists
-            if (results.canAccessProfiles && userId) {
-                try {
-                    const { data, error } = await supabase
-                        .from('profiles')
-                        .select('id, onboarding_completed')
-                        .eq('id', userId)
-                        .single();
-                    results.profileExists = !!data && !error;
-                    if (error && error.code !== 'PGRST116') {
-                        results.errors.push(`Profile check error: ${error.message}`);
-                    }
-                } catch (e) {
-                    results.errors.push(`Profile existence check error: ${e}`);
-                }
-            }
-
-            // Check if user preferences exist
-            if (results.canAccessUserPreferences && userId) {
-                try {
-                    const { data, error } = await supabase
-                        .from('user_preferences')
-                        .select('id')
-                        .eq('user_id', userId)
-                        .single();
-                    results.userPreferencesExist = !!data && !error;
-                    if (error && error.code !== 'PGRST116') {
-                        results.errors.push(`User preferences check error: ${error.message}`);
-                    }
-                } catch (e) {
-                    results.errors.push(`User preferences existence check error: ${e}`);
-                }
-            }
-
-        } catch (error) {
-            results.errors.push(`General debug error: ${error}`);
-        }
-
-        return results;
-    },
-
-    // Create default user preferences
-    createDefaultUserPreferences: async (userId: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('user_preferences')
-                .upsert({
-                    user_id: userId,
-                    favorite_genre: '',
-                    skill_level: 'beginner',
-                    primary_instrument: 'guitar',
-                    email_notifications: true,
-                    practice_reminders: false,
-                    new_features: true,
-                    marketing_emails: false,
-                    auto_scroll_speed: 'medium',
-                    default_instrument: 'guitar',
-                    chord_display: 'diagram',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }, {
-                    onConflict: 'user_id'
-                })
-                .select();
-
-            return { data, error };
-        } catch (error) {
-            console.error('Error creating default user preferences:', error);
-            return { data: null, error };
-        }
-    },    // Test user preferences table access
-    testUserPreferencesAccess: async (userId: string) => {
-        const results: {
-            canRead: boolean;
-            canWrite: boolean;
-            tableExists: boolean;
-            recordExists: boolean;
-            errors: string[];
-        } = {
-            canRead: false,
-            canWrite: false,
-            tableExists: false,
-            recordExists: false,
-            errors: []
-        };
-
-        try {
-            // Test if table exists and is accessible
-            const { data: countData, error: countError } = await supabase
-                .from('user_preferences')
-                .select('count', { count: 'exact', head: true });
-
-            if (countError) {
-                results.errors.push(`Table access error: ${countError.message || 'Unknown error'}`);
-                results.tableExists = false;
-            } else {
-                results.tableExists = true;
-                results.canRead = true;
-            }
-
-            // Test if user record exists
-            if (results.canRead) {
-                const { data: existingData, error: existingError } = await supabase
-                    .from('user_preferences')
-                    .select('id')
-                    .eq('user_id', userId)
-                    .single();
-
-                if (existingError && existingError.code !== 'PGRST116') {
-                    results.errors.push(`Record check error: ${existingError.message}`);
-                } else if (existingData) {
-                    results.recordExists = true;
-                }
-            }
-
-            // Test write access
-            if (results.canRead) {
-                const testData = {
-                    user_id: userId,
-                    skill_level: 'test',
-                    updated_at: new Date().toISOString()
-                };
-
-                const { error: writeError } = await supabase
-                    .from('user_preferences')
-                    .upsert(testData, { onConflict: 'user_id' });
-
-                if (writeError) {
-                    results.errors.push(`Write test error: ${writeError.message || 'Unknown write error'}`);
-                } else {
-                    results.canWrite = true;
-                }
-            }
-
-        } catch (error) {
-            results.errors.push(`General test error: ${error}`);
-        }
-
-        return results;
-    }
-}
-
-// Database API for fetching data
-export const databaseAPI = {
-    // Get all songs
-    getAllSongs: async () => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('*')
-            .order('title', { ascending: true });
 
         return { data, error };
     },
 
-    // Get song by ID
-    getSongById: async (id: string) => {
+    // Sign out
+    signOut: async () => {
+        return await supabase.auth.signOut();
+    },
+
+    // Reset password
+    resetPassword: async (email: string) => {
+        return await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/reset-password/confirm`,
+        });
+    },
+
+    // Update password
+    updatePassword: async (password: string) => {
+        return await supabase.auth.updateUser({
+            password: password
+        });
+    },
+
+    // Get current user
+    getCurrentUser: async () => {
+        return await supabase.auth.getUser();
+    },
+
+    // Get user profile
+    getUserProfile: async (userId: string): Promise<{ data: UserProfile | null; error: any }> => {
         const { data, error } = await supabase
-            .from('songs')
+            .from('profiles')
             .select('*')
-            .eq('id', id)
+            .eq('id', userId)
             .single();
 
         return { data, error };
     },
 
+    // Update user profile
+    updateUserProfile: async (userId: string, updates: Partial<UserProfile>) => {
+        return await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', userId);
+    },
+
+    // Check onboarding status
+    checkOnboardingStatus: async (userId: string) => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('onboarding_completed')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            console.error('Error checking onboarding status:', error);
+            return { onboarding_completed: false };
+        }
+
+        return { onboarding_completed: data?.onboarding_completed || false };
+    },
+
+    // Complete onboarding
+    completeOnboarding: async (userId: string, profileData: Partial<UserProfile>) => {
+        return await supabase
+            .from('profiles')
+            .update({
+                ...profileData,
+                onboarding_completed: true,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+    },
+
+    // Check if user is admin
+    isAdmin: async (userId: string): Promise<boolean> => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('Error checking admin status:', error);
+                return false;
+            }
+
+            return data?.role === 'admin';
+        } catch (error) {
+            console.error('Error checking admin status:', error);
+            return false;
+        }
+    },
+};
+
+// Song API
+export const songAPI = {
+    // Get all songs with pagination
+    getAllSongs: async (page = 0, limit = 20) => {
+        const offset = page * limit;
+
+        return await supabase
+            .from('songs')
+            .select('*')
+            .range(offset, offset + limit - 1)
+            .order('created_at', { ascending: false });
+    },
+
+    // Get song by ID
+    getSongById: async (id: string) => {
+        return await supabase
+            .from('songs')
+            .select('*')
+            .eq('id', id)
+            .single();
+    },
+
+    // Search songs
+    searchSongs: async (query: string) => {
+        return await supabase
+            .from('songs')
+            .select('*')
+            .or(`title.ilike.%${query}%,artist.ilike.%${query}%,genre.ilike.%${query}%`)
+            .order('popularity', { ascending: false });
+    },
+
     // Get songs by genre
     getSongsByGenre: async (genre: string) => {
-        const { data, error } = await supabase
+        return await supabase
             .from('songs')
             .select('*')
             .eq('genre', genre)
-            .order('title', { ascending: true });
-
-        return { data, error };
+            .order('popularity', { ascending: false });
     },
 
     // Get songs by artist
     getSongsByArtist: async (artist: string) => {
-        const { data, error } = await supabase
+        return await supabase
             .from('songs')
             .select('*')
             .eq('artist', artist)
-            .order('title', { ascending: true });
-
-        return { data, error };
+            .order('created_at', { ascending: false });
     },
 
     // Get popular songs
-    getPopularSongs: async (limit: number = 20) => {
-        const { data, error } = await supabase
+    getPopularSongs: async (limit = 20) => {
+        return await supabase
             .from('songs')
             .select('*')
             .order('popularity', { ascending: false })
             .limit(limit);
+    },
 
-        return { data, error };
+    // Get featured songs (same as popular for now)
+    getFeaturedSongs: async (limit = 10) => {
+        return await supabase
+            .from('songs')
+            .select('*')
+            .order('popularity', { ascending: false })
+            .limit(limit);
     },
 
     // Get all genres
-    getAllGenres: async () => {
+    getGenres: async () => {
+        return await supabase
+            .from('songs')
+            .select('genre')
+            .not('genre', 'is', null);
+    },
+
+    // Get genres with count
+    getGenresWithCount: async () => {
         const { data, error } = await supabase
             .from('songs')
             .select('genre')
@@ -389,12 +235,31 @@ export const databaseAPI = {
 
         if (error) return { data: [], error };
 
-        // Get unique genres
-        const uniqueGenres = [...new Set(data.map(song => song.genre))].filter(Boolean);
-        return { data: uniqueGenres, error: null };
+        // Count occurrences of each genre
+        const genreCounts: { [key: string]: number } = {};
+        data?.forEach(song => {
+            if (song.genre) {
+                genreCounts[song.genre] = (genreCounts[song.genre] || 0) + 1;
+            }
+        });
+
+        const genresWithCount = Object.entries(genreCounts).map(([genre, count]) => ({
+            genre,
+            count
+        }));
+
+        return { data: genresWithCount, error: null };
     },
 
     // Get all artists
+    getArtists: async () => {
+        return await supabase
+            .from('songs')
+            .select('artist')
+            .not('artist', 'is', null);
+    },
+
+    // Get all artists with song count
     getAllArtists: async () => {
         const { data, error } = await supabase
             .from('songs')
@@ -403,347 +268,164 @@ export const databaseAPI = {
 
         if (error) return { data: [], error };
 
-        // Get unique artists
-        const uniqueArtists = [...new Set(data.map(song => song.artist))].filter(Boolean);
-        return { data: uniqueArtists, error: null };
-    },
-
-    // Search songs
-    searchSongs: async (query: string) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('*')
-            .or(`title.ilike.%${query}%,artist.ilike.%${query}%,genre.ilike.%${query}%`)
-            .order('title', { ascending: true });
-
-        return { data, error };
-    },
-};
-
-// Song/Chord API functions
-// Note: Featured and Popular songs are now determined automatically:
-// - Featured: Top viewed songs from last 30 days (or all-time if insufficient recent data)
-// - Popular: Songs with minimum view count threshold (10+ views)
-// This prevents users from self-promoting and ensures quality content surfaces naturally
-export const songAPI = {
-    // Get featured songs for homepage (top viewed songs from last 30 days)
-    getFeaturedSongs: async (limit: number = 4) => {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        const { data, error } = await supabase
-            .from('songs')
-            .select('id, slug, title, artist_name, difficulty, view_count')
-            .gte('created_at', thirtyDaysAgo.toISOString())
-            .order('view_count', { ascending: false })
-            .limit(limit);
-
-        // If no recent songs have good view counts, fallback to all-time popular
-        if (!data || data.length < limit) {
-            const { data: fallbackData, error: fallbackError } = await supabase
-                .from('songs')
-                .select('id, slug, title, artist_name, difficulty, view_count')
-                .order('view_count', { ascending: false })
-                .limit(limit);
-
-            return { data: fallbackData, error: fallbackError };
-        }
-
-        return { data, error };
-    },
-
-    // Get popular songs (based on view count)
-    getPopularSongs: async (limit: number = 12) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('id, slug, title, artist_name, difficulty, genre_name, view_count')
-            .gte('view_count', 10) // Only show songs with at least 10 views
-            .order('view_count', { ascending: false })
-            .limit(limit);
-
-        return { data, error };
-    },
-
-    // Get song by ID
-    getSongById: async (id: string) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        return { data, error };
-    },
-
-    // Get song by slug (SEO-friendly URL)
-    getSongBySlug: async (slug: string) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('*')
-            .eq('slug', slug)
-            .single();
-
-        return { data, error };
-    },
-
-    // Get genres with song count
-    getGenresWithCount: async () => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('genre_name')
-            .not('genre_name', 'is', null);
-
-        if (error) return { data: [], error };
-
-        // Count songs per genre
-        const genreCount = data.reduce((acc: any, song: any) => {
-            const genre = song.genre_name;
-            if (genre) {
-                acc[genre] = (acc[genre] || 0) + 1;
-            }
-            return acc;
-        }, {});
-
-        // Convert to array format
-        const genres = Object.entries(genreCount).map(([name, count]) => ({
-            id: name.toLowerCase().replace(/\s+/g, '-'),
-            name,
-            count
-        }));
-
-        return { data: genres, error: null };
-    },
-
-    // Get songs by genre
-    getSongsByGenre: async (genreName: string, limit: number = 20) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('id, slug, title, artist_name, difficulty, view_count')
-            .eq('genre_name', genreName)
-            .order('view_count', { ascending: false })
-            .limit(limit);
-
-        return { data, error };
-    },
-
-    // Get songs by artist
-    getSongsByArtist: async (artistName: string, limit: number = 20) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('id, slug, title, artist_name, difficulty, genre_name, view_count')
-            .ilike('artist_name', `%${artistName}%`) // Use ilike to match artist in comma-separated list
-            .order('view_count', { ascending: false })
-            .limit(limit);
-
-        if (error) return { data: [], error };
-
-        // Filter results to only include songs where the artist name is actually present
-        // (to avoid false matches like "John" matching "Johnson")
-        const filteredData = data.filter((song: any) => {
-            const artists = song.artist_name.split(',').map((a: string) => a.trim().toLowerCase());
-            return artists.includes(artistName.toLowerCase());
-        });
-
-        return { data: filteredData, error: null };
-    },
-
-    // Search songs
-    searchSongs: async (query: string, limit: number = 20) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('id, title, artist_name, difficulty, genre_name, view_count')
-            .or(`title.ilike.%${query}%,artist_name.ilike.%${query}%`)
-            .order('view_count', { ascending: false })
-            .limit(limit);
-
-        return { data, error };
-    },
-
-    // Increment view count
-    incrementViewCount: async (songId: string) => {
-        const { error } = await supabase.rpc('increment_song_view_count', {
-            song_id: songId
-        });
-
-        return { error };
-    },
-
-    // Get all unique artists
-    getAllArtists: async () => {
-        const { data, error } = await supabase
-            .from('songs')
-            .select('artist_name')
-            .not('artist_name', 'is', null);
-
-        if (error) return { data: [], error };
-
-        // Split multiple artists and count songs for each individual artist
-        const artistCount: { [key: string]: number } = {};
-
-        data.forEach((song: any) => {
-            const artistName = song.artist_name;
-            if (artistName) {
-                // Split by comma and process each artist
-                const artists = artistName.split(',').map((artist: string) => artist.trim());
-                artists.forEach((artist: string) => {
-                    if (artist) {
-                        artistCount[artist] = (artistCount[artist] || 0) + 1;
-                    }
-                });
+        // Count occurrences of each artist
+        const artistCounts: { [key: string]: number } = {};
+        data?.forEach(song => {
+            if (song.artist) {
+                artistCounts[song.artist] = (artistCounts[song.artist] || 0) + 1;
             }
         });
 
-        // Convert to array format
-        const artists = Object.entries(artistCount).map(([name, count]) => ({
-            name,
-            songCount: count as number
+        const artistsWithCount = Object.entries(artistCounts).map(([artist, count]) => ({
+            name: artist,
+            songCount: count
         }));
 
-        return { data: artists.sort((a, b) => b.songCount - a.songCount), error: null };
+        // Sort by song count descending, then by name
+        artistsWithCount.sort((a, b) => {
+            if (b.songCount !== a.songCount) {
+                return b.songCount - a.songCount;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        return { data: artistsWithCount, error: null };
     },
 
-    // Add new song (requires authentication)
-    addSong: async (songData: any) => {
-        const { data, error } = await supabase
+    // Add new song (admin only)
+    addSong: async (songData: Omit<Song, 'id' | 'created_at' | 'updated_at'>) => {
+        return await supabase
             .from('songs')
             .insert([{
                 ...songData,
-                view_count: 0,
                 created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
             }])
             .select()
             .single();
-
-        return { data, error };
     },
 
-    // Update song (requires authentication and ownership)
-    updateSong: async (songId: string, songData: any) => {
-        const { data, error } = await supabase
+    // Update song (admin only)
+    updateSong: async (id: string, updates: Partial<Song>) => {
+        return await supabase
             .from('songs')
             .update({
-                ...songData,
-                updated_at: new Date().toISOString()
+                ...updates,
+                updated_at: new Date().toISOString(),
             })
-            .eq('id', songId)
+            .eq('id', id)
             .select()
             .single();
-
-        return { data, error };
     },
 
-    // Delete song (requires authentication and ownership)
-    deleteSong: async (songId: string) => {
-        const { error } = await supabase
+    // Delete song (admin only)
+    deleteSong: async (id: string) => {
+        return await supabase
             .from('songs')
             .delete()
-            .eq('id', songId);
-
-        return { error };
+            .eq('id', id);
     },
 
-    // Admin function to manually set featured status (if needed)
-    setFeaturedStatus: async (songId: string, isFeatured: boolean) => {
-        const { data, error } = await supabase
-            .from('songs')
-            .update({ is_featured: isFeatured, updated_at: new Date().toISOString() })
-            .eq('id', songId)
-            .select('id, title, is_featured')
-            .single();
-
-        return { data, error };
-    },
-
-    // Function to automatically update popular status based on view count
-    updatePopularStatus: async () => {
-        // Set songs with high view counts as popular
-        const { error: setPopularError } = await supabase
-            .from('songs')
-            .update({ is_popular: true })
-            .gte('view_count', 50); // Songs with 50+ views are considered popular
-
-        // Unset popular status for songs with low view counts
-        const { error: unsetPopularError } = await supabase
-            .from('songs')
-            .update({ is_popular: false })
-            .lt('view_count', 50);
-
-        return {
-            setPopularError,
-            unsetPopularError,
-            success: !setPopularError && !unsetPopularError
-        };
+    // Increment song popularity
+    incrementPopularity: async (id: string) => {
+        return await supabase.rpc('increment_song_popularity', { song_id: id });
     },
 
     // Get website statistics
     getWebsiteStats: async () => {
         try {
-            // Get total songs count
-            const { count: totalSongs, error: songsError } = await supabase
-                .from('songs')
-                .select('*', { count: 'exact', head: true });
+            const [
+                { count: totalSongs },
+                { data: genresData, error: genresError },
+                { data: artistsData, error: artistsError },
+                { count: totalUsers }
+            ] = await Promise.all([
+                supabase.from('songs').select('*', { count: 'exact', head: true }),
+                supabase.from('songs').select('genre').not('genre', 'is', null),
+                supabase.from('songs').select('artist').not('artist', 'is', null),
+                supabase.from('profiles').select('*', { count: 'exact', head: true })
+            ]);
 
-            // Get total genres count
-            const { count: totalGenres, error: genresError } = await supabase
-                .from('genres')
-                .select('*', { count: 'exact', head: true });
+            // Count unique genres
+            const uniqueGenres = genresData ? [...new Set(genresData.map(item => item.genre))].length : 0;
 
-            // Get unique artists count (since artists can be comma-separated)
-            const { data: songsData, error: artistsError } = await supabase
-                .from('songs')
-                .select('artist_name');
-
-            let uniqueArtists = 0;
-            if (songsData && !artistsError) {
-                const allArtists = new Set<string>();
-                songsData.forEach(song => {
-                    if (song.artist_name) {
-                        // Split by comma and add each artist to the set
-                        song.artist_name.split(',').forEach((artist: string) => {
-                            allArtists.add(artist.trim());
-                        });
-                    }
-                });
-                uniqueArtists = allArtists.size;
-            }            // Get total users count from auth.users (this requires RLS policy or service role)
-            // For now, we'll use a placeholder or estimated count
-            // Note: In production, you'd need to set up a function or use service role for this
-            let totalUsers = 0;
-            try {
-                // Try to get user count - this might fail due to RLS policies
-                const { data: usersData } = await supabase.auth.admin.listUsers();
-                totalUsers = usersData?.users?.length || 0;
-            } catch (userError) {
-                // Fallback: estimate based on songs created (each song creator is a user)
-                const { data: userSongs } = await supabase
-                    .from('songs')
-                    .select('created_at')
-                    .not('created_at', 'is', null);
-
-                // Rough estimation: assume average user creates 2-3 songs
-                totalUsers = userSongs ? Math.ceil(userSongs.length / 2.5) : 50;
-            }
+            // Count unique artists
+            const uniqueArtists = artistsData ? [...new Set(artistsData.map(item => item.artist))].length : 0;
 
             return {
                 data: {
                     totalSongs: totalSongs || 0,
-                    totalGenres: totalGenres || 0,
+                    totalGenres: uniqueGenres,
                     totalArtists: uniqueArtists,
-                    totalUsers: totalUsers
+                    totalUsers: totalUsers || 0,
                 },
-                error: songsError || genresError || artistsError
+                error: null
             };
         } catch (error) {
+            console.error('Error fetching website stats:', error);
             return {
                 data: {
                     totalSongs: 0,
                     totalGenres: 0,
                     totalArtists: 0,
-                    totalUsers: 0
+                    totalUsers: 0,
                 },
-                error: error
+                error
             };
         }
     },
 };
+
+// Admin API
+export const adminAPI = {
+    // Promote user to admin
+    promoteToAdmin: async (userId: string) => {
+        return await supabase
+            .from('profiles')
+            .update({ role: 'admin' })
+            .eq('id', userId);
+    },
+
+    // Demote admin to user
+    demoteToUser: async (userId: string) => {
+        return await supabase
+            .from('profiles')
+            .update({ role: 'user' })
+            .eq('id', userId);
+    },
+
+    // Get all users (admin only)
+    getAllUsers: async () => {
+        return await supabase
+            .from('profiles')
+            .select('*')
+            .order('created_at', { ascending: false });
+    },
+
+    // Get admin statistics
+    getAdminStats: async () => {
+        const [
+            { count: totalSongs },
+            { count: totalUsers },
+            { count: totalAdmins }
+        ] = await Promise.all([
+            supabase.from('songs').select('*', { count: 'exact', head: true }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin')
+        ]);
+
+        return {
+            totalSongs: totalSongs || 0,
+            totalUsers: totalUsers || 0,
+            totalAdmins: totalAdmins || 0,
+        };
+    },
+
+    // Get website statistics
+    getWebsiteStats: async () => {
+        return await songAPI.getWebsiteStats();
+    },
+};
+
+// Export default client
+export default supabase;
