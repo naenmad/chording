@@ -69,6 +69,10 @@ DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
 CREATE POLICY "profiles_select_policy" ON public.profiles
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
+CREATE POLICY "profiles_insert_policy" ON public.profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
 DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;  
 CREATE POLICY "profiles_update_policy" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
